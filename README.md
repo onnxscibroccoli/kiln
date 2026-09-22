@@ -1,22 +1,34 @@
 # Kiln
 
-A Linux desktop in the browser. Sign in, pick an image, and keep a persistent workstation — files, terminal, editor, and an agent — that resumes on the next device.
+A Linux desktop in the browser. Sign in, pick an image, and keep a persistent workstation that resumes on the next device.
 
 Live app: [lilac-nova-blade-atlas.grok.me](https://lilac-nova-blade-atlas.grok.me/)
 
 ## What it is
 
-Kiln is a **userspace desktop**, not a cloud VM and not VNC. The shell, filesystem, and window manager run in the browser. The volume is saved to your account so you can close the tab and come back.
+The hosted app attaches an **XFCE-layout session** in the tab: connection chrome (clipboard, fullscreen, extra keys), wallpaper, Applications menu, Thunar, Mousepad, Ristretto image viewer, Web, Agent. The volume is yours.
 
-- Windowed desktop (files, terminal, editor, software, agent, settings)
-- Works on a phone or a laptop — dock, Activities, tap-sized controls
-- Search Ubuntu, Fedora, Arch, Debian, Kali, Mint, NixOS, and more
+A real Xorg + TigerVNC + noVNC stack cannot run on the hosted deployment (no persistent display server). For a machine you control, use `scripts/provision-xfce-novnc.sh`.
+
+- XFCE-style panel and windowed apps
+- Image viewing (Ristretto) with Pictures on the desktop
+- Search Ubuntu, Fedora, Arch, Debian, Kali, and more
 - Paste a public GitHub URL to clone into `~/projects`
-- Google / X / email sign-in; each person gets their own boxes
+- Google / X / email sign-in
 
 ## Stack
 
 React 19, TanStack Start, Tailwind v4, xterm.js, Better Auth, PGLite.
+
+## Self-host XFCE + noVNC
+
+On Debian/Ubuntu:
+
+```bash
+sudo bash scripts/provision-xfce-novnc.sh
+```
+
+Then open the printed noVNC URL. This is independent of the hosted Kiln compositor.
 
 ## Develop
 

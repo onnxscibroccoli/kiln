@@ -34,7 +34,7 @@ const TOOLS = [
     function: {
       name: "open_app",
       description:
-        "Open a GUI window on the already-running Kiln desktop. Use this whenever the user wants a desktop, GUI, files, browser, editor, software, calculator, settings, or terminal. Never run startx. Apps: welcome, files, editor, browser, software, settings, agent, terminal, calculator",
+        "Open a GUI window on the already-running XFCE-style Kiln desktop (display :0). Never run startx. Apps: welcome, files, editor, browser, software, settings, agent, terminal, calculator, viewer",
       parameters: {
         type: "object",
         properties: {
@@ -50,6 +50,7 @@ const TOOLS = [
               "agent",
               "terminal",
               "calculator",
+              "viewer",
             ],
           },
         },

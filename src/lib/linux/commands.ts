@@ -1,4 +1,5 @@
 import { type AppId, type ExecResult, type ShellContext } from "./shell";
+import { isImagePath } from "./images-meta";
 import { ANSI } from "./ansi";
 import { BASE_PACKAGES, homeDir } from "./seed";
 import { matchGlob } from "./vfs";
@@ -610,7 +611,7 @@ register(["nautilus", "nemo", "thunar", "files", "open"], (args, ctx) => {
     const abs = resolve(args[0], ctx);
     if (ctx.vfs.isFile(abs)) {
       ctx.openFile(abs);
-      ctx.openApp?.("editor");
+      ctx.openApp?.(isImagePath(abs) ? "viewer" : "editor");
       return `opening ${abs}`;
     }
     if (ctx.vfs.isDir(abs)) ctx.cwd = abs;
@@ -641,7 +642,16 @@ register(["gedit", "mousepad", "kate"], (args, ctx) => {
     ctx.openFile(abs);
   }
   ctx.openApp?.("editor");
-  return "opening Text Editor";
+  return "opening Mousepad";
+});
+
+register(["ristretto", "eog", "gpicview", "feh"], (args, ctx) => {
+  if (args[0]) {
+    const abs = resolve(args[0], ctx);
+    ctx.openFile(abs);
+  }
+  ctx.openApp?.("viewer");
+  return "opening Ristretto";
 });
 
 register(["start", "gtk-launch"], (args, ctx) => {
@@ -669,6 +679,10 @@ register(["start", "gtk-launch"], (args, ctx) => {
     epiphany: "browser",
     calculator: "calc",
     "gnome-calculator": "calc",
+    ristretto: "viewer",
+    eog: "viewer",
+    pictures: "viewer",
+    viewer: "viewer",
     welcome: "welcome",
     desktop: "welcome",
     gui: "welcome",

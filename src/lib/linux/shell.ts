@@ -13,7 +13,8 @@ export type AppId =
   | "agent"
   | "settings"
   | "browser"
-  | "calc";
+  | "calc"
+  | "viewer";
 
 export type ShellHooks = {
   openFile: (path: string) => void;

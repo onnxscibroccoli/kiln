@@ -22,6 +22,10 @@ const APP_ALIAS: Record<string, AppId> = {
   term: "term",
   calculator: "calc",
   calc: "calc",
+  viewer: "viewer",
+  ristretto: "viewer",
+  pictures: "viewer",
+  eog: "viewer",
 };
 
 export function AgentApp({

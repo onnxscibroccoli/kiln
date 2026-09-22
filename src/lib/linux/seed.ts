@@ -65,6 +65,14 @@ PS1='\\u@\\h:\\w\\$ '
         Desktop: dir(),
         Documents: dir(),
         Downloads: dir(),
+        Pictures: dir({
+          "kiln.svg": file(
+            `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400"><rect width="640" height="400" fill="#0c0c0e"/><rect x="80" y="220" width="200" height="90" fill="#2a1810"/><rect x="100" y="160" width="40" height="60" fill="#c46a48"/><circle cx="460" cy="120" r="48" fill="#c5d0cc" opacity="0.35"/><text x="80" y="80" fill="#f1efe8" font-family="serif" font-size="28">Kiln</text></svg>\n`,
+          ),
+          "display.svg": file(
+            `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400"><rect width="640" height="400" fill="#121214"/><rect x="90" y="70" width="460" height="260" rx="8" fill="#1c1c20" stroke="#c5d0cc" stroke-width="2"/><rect x="110" y="90" width="420" height="200" fill="#0c0c0e"/><rect x="280" y="330" width="80" height="12" fill="#8fa09b"/></svg>\n`,
+          ),
+        }),
         ".bashrc": file(bashrc),
         ".profile": file("source ~/.bashrc\n"),
         ".gitconfig": file(`[user]\n\tname = ${user}\n\temail = ${user}@${hostname}.kiln\n`),
@@ -120,6 +128,20 @@ PS1='\\u@\\h:\\w\\$ '
   });
 
   return new Vfs(root);
+}
+
+export function ensureUserDirs(vfs: Vfs, user: string): void {
+  const home = homeDir(user);
+  for (const d of ["Desktop", "Documents", "Downloads", "Pictures", "projects"]) {
+    vfs.mkdir(`${home}/${d}`, true);
+  }
+  const kiln = `${home}/Pictures/kiln.svg`;
+  if (!vfs.exists(kiln)) {
+    vfs.writeFile(
+      kiln,
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400"><rect width="640" height="400" fill="#0c0c0e"/><rect x="80" y="220" width="200" height="90" fill="#2a1810"/><rect x="100" y="160" width="40" height="60" fill="#c46a48"/><circle cx="460" cy="120" r="48" fill="#c5d0cc" opacity="0.35"/><text x="80" y="80" fill="#f1efe8" font-family="serif" font-size="28">Kiln</text></svg>\n`,
+    );
+  }
 }
 
 export function bootLines(distro: Distro, hostname: string, restoring: boolean): string[] {

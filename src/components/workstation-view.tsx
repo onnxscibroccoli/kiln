@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { RedirectToSignIn } from "@/lib/auth/gates";
 import { useCurrentUser, useCurrentUserState } from "@/lib/auth/use-current-user";
 import { getDistro } from "@/lib/linux/distros";
-import { seedVfs, homeDir, BASE_PACKAGES } from "@/lib/linux/seed";
+import { seedVfs, homeDir, BASE_PACKAGES, ensureUserDirs } from "@/lib/linux/seed";
 import { Vfs } from "@/lib/linux/vfs";
 import { createState, type ShellHooks, type ShellState } from "@/lib/linux/shell";
 import {
@@ -100,6 +100,7 @@ function WorkstationSession({
       hostname: box.name,
       distro,
     });
+    ensureUserDirs(shellRef.current.vfs, username);
   }
 
   const [rev, setRev] = useState(0);

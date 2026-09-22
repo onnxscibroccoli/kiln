@@ -22,8 +22,9 @@ export function SettingsApp({
         {box.githubRepo && <Row k="GitHub" v={box.githubRepo} />}
       </dl>
       <p className="mt-6 max-w-sm text-sm leading-relaxed text-muted-foreground">
-        Graphical session is attached in this tab (Kiln compositor, wayland-0). There is no remote
-        display to start — the dock and windows are the desktop.
+        Session is attached like a remote display: XFCE layout, control bar, image viewer. A real Xorg
+        stack cannot run inside this hosted app; the GitHub repo includes a self-host provision script
+        for TigerVNC and noVNC on your own machine.
       </p>
     </div>
   );

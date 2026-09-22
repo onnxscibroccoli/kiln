@@ -1,17 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
 import {
-  ArrowLeft,
   Bot,
   Calculator,
   Code2,
-  File as FileIcon,
   Files,
   Folder,
   Globe,
-  LayoutGrid,
+  Image as ImageIcon,
   Package,
-  Save,
   Settings,
   TerminalSquare,
 } from "lucide-react";
@@ -24,52 +20,56 @@ import { FilesApp } from "@/components/desktop/files-app";
 import { WelcomeApp } from "@/components/desktop/welcome-app";
 import { BrowserApp } from "@/components/desktop/browser-app";
 import { CalcApp } from "@/components/desktop/calc-app";
+import { ImageViewer } from "@/components/desktop/image-viewer";
+import { ConnectSplash, SessionBar } from "@/components/desktop/session-chrome";
+import { XfcePanel } from "@/components/desktop/xfce-panel";
 import { WindowFrame, type WinState } from "@/components/desktop/window-frame";
 import { Button } from "@/components/ui/button";
-import { UserButton } from "@/lib/auth/gates";
 import { type Distro } from "@/lib/linux/distros";
+import { isImagePath } from "@/lib/linux/images-meta";
 import { type AppId, type ShellHooks, type ShellState } from "@/lib/linux/shell";
 import { type Workstation } from "@/lib/workstations";
 import { cn } from "@/lib/utils";
 
 const APPS: { id: AppId; label: string; icon: typeof Files }[] = [
-  { id: "welcome", label: "Desktop", icon: LayoutGrid },
-  { id: "files", label: "Files", icon: Files },
-  { id: "editor", label: "Editor", icon: Code2 },
+  { id: "files", label: "Thunar", icon: Files },
+  { id: "editor", label: "Mousepad", icon: Code2 },
   { id: "browser", label: "Web", icon: Globe },
+  { id: "viewer", label: "Ristretto", icon: ImageIcon },
   { id: "images", label: "Software", icon: Package },
   { id: "agent", label: "Agent", icon: Bot },
   { id: "calc", label: "Calculator", icon: Calculator },
   { id: "settings", label: "Settings", icon: Settings },
   { id: "term", label: "Terminal", icon: TerminalSquare },
+  { id: "welcome", label: "About", icon: Folder },
 ];
 
-const DOCK: AppId[] = ["files", "browser", "editor", "images", "agent"];
+const LAUNCH: AppId[] = ["files", "browser", "editor", "viewer", "agent"];
 
 const GEOM: Record<AppId, Pick<WinState, "title" | "x" | "y" | "w" | "h">> = {
-  welcome: { title: "Desktop", x: 72, y: 28, w: 560, h: 480 },
-  files: { title: "Files", x: 24, y: 16, w: 640, h: 480 },
+  welcome: { title: "About this session", x: 72, y: 28, w: 560, h: 480 },
+  files: { title: "Thunar", x: 24, y: 16, w: 640, h: 480 },
   term: { title: "Terminal", x: 330, y: 40, w: 640, h: 390 },
-  editor: { title: "Text Editor", x: 160, y: 20, w: 700, h: 480 },
+  editor: { title: "Mousepad", x: 160, y: 20, w: 700, h: 480 },
   images: { title: "Software", x: 72, y: 28, w: 740, h: 520 },
   agent: { title: "Agent", x: 340, y: 28, w: 420, h: 520 },
   settings: { title: "Settings", x: 220, y: 64, w: 440, h: 420 },
   browser: { title: "Web", x: 80, y: 24, w: 720, h: 520 },
   calc: { title: "Calculator", x: 400, y: 80, w: 320, h: 440 },
+  viewer: { title: "Ristretto", x: 90, y: 20, w: 680, h: 500 },
 };
 
 function freshWins(desktop: boolean): Record<AppId, WinState> {
   const base = {} as Record<AppId, WinState>;
   for (const app of APPS) {
     const g = GEOM[app.id];
-    const open = app.id === "welcome";
     base[app.id] = {
       app: app.id,
       ...g,
-      z: open ? 2 : 0,
+      z: 0,
       minimized: false,
       maximized: !desktop,
-      open,
+      open: false,
     };
   }
   return base;
@@ -93,7 +93,6 @@ export function DesktopShell({
   onCwd,
   onDraft,
   onSaveEditor,
-  persist,
   bump,
   onApplyImage,
 }: {
@@ -119,13 +118,15 @@ export function DesktopShell({
   onApplyImage: (distroId: string, githubRepo: string) => Promise<void>;
 }) {
   const [desktop, setDesktop] = useState(false);
+  const [connected, setConnected] = useState(false);
   const [wins, setWins] = useState<Record<AppId, WinState>>(() => freshWins(false));
-  const [focus, setFocus] = useState<AppId>("welcome");
+  const [focus, setFocus] = useState<AppId | null>(null);
   const [overview, setOverview] = useState(false);
   const [clock, setClock] = useState("");
   const [pick, setPick] = useState(distro);
   const [gh, setGh] = useState(box.githubRepo ?? "");
   const [applying, setApplying] = useState(false);
+  const [clip, setClip] = useState(cloneNote ?? "");
 
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 768px)");
@@ -146,8 +147,7 @@ export function DesktopShell({
   }, []);
 
   useEffect(() => {
-    const tick = () =>
-      setClock(new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }));
+    const tick = () => setClock(new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }));
     tick();
     const t = window.setInterval(tick, 15_000);
     return () => window.clearInterval(t);
@@ -179,84 +179,62 @@ export function DesktopShell({
       openApp,
       openFile: (path) => {
         hooks.openFile(path);
-        openApp("editor");
+        openApp(isImagePath(path) ? "viewer" : "editor");
       },
     }),
     [hooks, openApp],
   );
 
-  const active = Object.values(wins).filter((w) => w.open && !w.minimized);
-  const anyWindow = active.length > 0;
+  const openWindows = Object.values(wins).filter((w) => w.open && !w.minimized);
+
+  function openFromFiles(p: string) {
+    onOpenFile(p);
+    openApp(isImagePath(p) ? "viewer" : "editor");
+  }
+
+  if (!connected) {
+    return (
+      <ConnectSplash
+        host={box.name}
+        distro={distro.name}
+        onDone={() => setConnected(true)}
+      />
+    );
+  }
 
   const icons = [
     { label: "Home", path: home, dir: true },
+    { label: "Pictures", path: `${home}/Pictures`, dir: true },
     { label: "Projects", path: `${home}/projects`, dir: true },
-    { label: "README", path: `${home}/README.md`, dir: false },
   ];
 
   return (
     <div className="kiln-desk flex h-dvh flex-col" data-desk={distro.desk}>
-      <header className="kiln-topbar flex h-11 shrink-0 items-center gap-1 border-b border-border px-1 sm:px-2">
-        <Button variant="ghost" size="icon" className="size-11" asChild>
-          <Link to="/boxes" aria-label="Back to boxes">
-            <ArrowLeft className="size-4" />
-          </Link>
-        </Button>
-        <button
-          type="button"
-          onClick={() => setOverview((v) => !v)}
-          className="inline-flex h-11 items-center gap-2 px-2 text-sm"
-        >
-          <LayoutGrid className="size-4" />
-          <span className="hidden sm:inline">Activities</span>
-        </button>
-        <div className="min-w-0 flex-1 text-center">
-          <p className="truncate text-xs sm:text-sm">
-            {box.name}
-            <span className="text-muted-foreground"> · {distro.name}</span>
-          </p>
-          {cloneNote && <p className="truncate text-[11px] text-sage-dim">{cloneNote}</p>}
-        </div>
-        <span className="hidden text-xs text-muted-foreground sm:inline">
-          {saveState === "saving"
-            ? "Saving…"
-            : saveState === "saved"
-              ? "Saved"
-              : saveState === "error"
-                ? "Save failed"
-                : ""}
-        </span>
-        <Button variant="ghost" size="icon" className="size-11" onClick={() => persist()} aria-label="Save">
-          <Save className="size-4" />
-        </Button>
-        <time className="hidden px-2 font-mono text-xs tabular-nums sm:inline">{clock}</time>
-        <div className="hidden sm:block">
-          <UserButton />
-        </div>
-      </header>
+      <SessionBar
+        host={box.name}
+        distro={distro.name}
+        saveState={saveState}
+        clipboard={clip}
+        onClipboard={setClip}
+      />
 
       <div className="relative min-h-0 flex-1">
         <div className="pointer-events-none absolute inset-0 flex items-start justify-center pt-16">
           <p className="font-display text-2xl tracking-tight text-paper/70 italic">{distro.pretty}</p>
         </div>
 
-        <div className={cn("absolute top-4 left-3 z-10 flex flex-col gap-2", anyWindow && !desktop && "hidden")}>
+        <div className={cn("absolute top-4 left-3 z-10 flex flex-col gap-2", openWindows.length && !desktop && "hidden")}>
           {icons.map((icon) => (
             <button
               key={icon.label}
               type="button"
               onClick={() => {
-                if (icon.dir) {
-                  if (st.vfs.isDir(icon.path)) onCwd(icon.path);
-                  openApp("files");
-                } else {
-                  onOpenFile(icon.path);
-                  openApp("editor");
-                }
+                if (st.vfs.isDir(icon.path)) onCwd(icon.path);
+                openApp(icon.label === "Pictures" ? "viewer" : "files");
               }}
               className="pointer-events-auto flex w-20 flex-col items-center gap-1 rounded-lg px-1 py-2 text-paper hover:bg-paper/10"
             >
-              {icon.dir ? <Folder className="size-8" /> : <FileIcon className="size-8" />}
+              <Folder className="size-8" />
               <span className="w-full truncate text-center text-[11px]">{icon.label}</span>
             </button>
           ))}
@@ -277,24 +255,17 @@ export function DesktopShell({
                 }}
                 onClose={() => setWins((w) => ({ ...w, [id]: { ...w[id]!, open: false, minimized: false } }))}
                 onMin={() => setWins((w) => ({ ...w, [id]: { ...w[id]!, minimized: true } }))}
-                onMax={() =>
-                  setWins((w) => ({ ...w, [id]: { ...w[id]!, maximized: !w[id]!.maximized } }))
-                }
+                onMax={() => setWins((w) => ({ ...w, [id]: { ...w[id]!, maximized: !w[id]!.maximized } }))}
                 onMove={(x, y) => setWins((w) => ({ ...w, [id]: { ...w[id]!, x, y } }))}
               >
-                {id === "welcome" && (
-                  <WelcomeApp distro={distro} hostname={box.name} onOpen={openApp} />
-                )}
+                {id === "welcome" && <WelcomeApp distro={distro} hostname={box.name} onOpen={openApp} />}
                 {id === "files" && (
                   <FilesApp
                     vfs={st.vfs}
                     home={home}
                     cwd={st.cwd}
                     active={openPath}
-                    onOpen={(p) => {
-                      onOpenFile(p);
-                      openApp("editor");
-                    }}
+                    onOpen={openFromFiles}
                     onCwd={onCwd}
                     rev={rev}
                   />
@@ -311,25 +282,14 @@ export function DesktopShell({
                   />
                 )}
                 {id === "editor" && (
-                  <EditorPane
-                    path={openPath}
-                    value={draft}
-                    dirty={dirty}
-                    onChange={onDraft}
-                    onSave={onSaveEditor}
-                  />
+                  <EditorPane path={openPath} value={draft} dirty={dirty} onChange={onDraft} onSave={onSaveEditor} />
                 )}
                 {id === "images" && (
                   <div className="flex h-full min-h-0 flex-col gap-3 overflow-auto p-3">
                     <p className="text-sm text-muted-foreground">
-                      Search the catalog or paste a GitHub image URL. Your files stay.
+                      Search a Linux image or paste a GitHub URL. Your files stay.
                     </p>
-                    <ImageBrowser
-                      selected={pick.id}
-                      onSelect={setPick}
-                      githubRepo={gh}
-                      onGithubRepo={setGh}
-                    />
+                    <ImageBrowser selected={pick.id} onSelect={setPick} githubRepo={gh} onGithubRepo={setGh} />
                     <Button
                       className="h-11"
                       disabled={applying}
@@ -346,6 +306,9 @@ export function DesktopShell({
                 {id === "settings" && <SettingsApp box={box} distro={distro} user={st.user} />}
                 {id === "browser" && <BrowserApp hooks={hooked} />}
                 {id === "calc" && <CalcApp />}
+                {id === "viewer" && (
+                  <ImageViewer vfs={st.vfs} home={home} path={openPath} onPath={onOpenFile} rev={rev} />
+                )}
               </WindowFrame>
             </div>
           );
@@ -354,7 +317,7 @@ export function DesktopShell({
         {overview && (
           <div className="absolute inset-0 z-50 flex flex-col bg-background/80 p-4 backdrop-blur-sm">
             <p className="text-xs tracking-[0.18em] text-sage-dim uppercase">Applications</p>
-            <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-3 md:grid-cols-5">
+            <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-5">
               {APPS.map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
@@ -368,45 +331,40 @@ export function DesktopShell({
               ))}
             </div>
             <Button variant="ghost" className="mt-6 self-start" onClick={() => setOverview(false)}>
-              Close overview
+              Close menu
             </Button>
           </div>
         )}
       </div>
 
-      <nav className="kiln-dock mx-auto mb-2 flex h-14 w-[min(100%-1rem,28rem)] items-center justify-around rounded-xl px-1">
-        <button
-          type="button"
-          aria-label="Activities"
-          onClick={() => setOverview((v) => !v)}
-          className="flex size-11 items-center justify-center text-muted-foreground hover:text-foreground"
-        >
-          <LayoutGrid className="size-5" />
-        </button>
-        {DOCK.map((id) => {
+      <XfcePanel
+        clock={clock}
+        menuOpen={overview}
+        onMenu={() => setOverview((v) => !v)}
+        focus={focus}
+        launchers={LAUNCH.map((id) => {
           const meta = APPS.find((a) => a.id === id)!;
           const Icon = meta.icon;
           const on = wins[id]!.open && !wins[id]!.minimized && focus === id;
-          return (
-            <button
-              key={id}
-              type="button"
-              aria-label={meta.label}
-              onClick={() => {
-                if (wins[id]!.open && !wins[id]!.minimized && focus === id && desktop) {
-                  setWins((w) => ({ ...w, [id]: { ...w[id]!, minimized: true } }));
-                } else openApp(id);
-              }}
-              className={cn(
-                "flex size-11 items-center justify-center rounded-lg",
-                on ? "text-sage" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <Icon className="size-5" />
-            </button>
-          );
+          return {
+            id,
+            label: meta.label,
+            icon: <Icon className="size-5" />,
+            on,
+            onClick: () => {
+              if (wins[id]!.open && !wins[id]!.minimized && focus === id && desktop) {
+                setWins((w) => ({ ...w, [id]: { ...w[id]!, minimized: true } }));
+              } else openApp(id);
+            },
+          };
         })}
-      </nav>
+        tasks={openWindows.map((w) => ({
+          id: w.app,
+          label: w.title,
+          on: focus === w.app,
+          onClick: () => openApp(w.app),
+        }))}
+      />
     </div>
   );
 }
