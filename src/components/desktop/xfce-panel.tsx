@@ -9,18 +9,17 @@ export function XfcePanel({
   onMenu,
   tasks,
   launchers,
-  focus,
+  status,
 }: {
   clock: string;
   menuOpen: boolean;
   onMenu: () => void;
   tasks: { id: AppId; label: string; on: boolean; onClick: () => void }[];
   launchers: { id: AppId; label: string; icon: ReactNode; on: boolean; onClick: () => void }[];
-  focus: AppId | null;
+  status: string;
 }) {
-  void focus;
   return (
-    <nav className="kiln-dock relative mx-auto mb-1 flex h-14 w-[min(100%-0.5rem,52rem)] items-center gap-1 rounded-lg px-1">
+    <nav className="kiln-xfce-panel relative flex h-14 w-full shrink-0 items-center gap-1 px-1">
       <button
         type="button"
         aria-label="Applications"
@@ -44,7 +43,7 @@ export function XfcePanel({
             onClick={l.onClick}
             className={cn(
               "inline-flex size-11 items-center justify-center rounded-md",
-              l.on ? "text-sage" : "text-muted-foreground hover:text-foreground",
+              l.on ? "bg-secondary text-sage" : "text-muted-foreground hover:text-foreground",
             )}
           >
             {l.icon}
@@ -64,7 +63,8 @@ export function XfcePanel({
           </button>
         ))}
       </div>
-      <time className="hidden px-3 font-mono text-xs tabular-nums sm:inline">{clock}</time>
+      <p className="hidden truncate px-2 font-mono text-[11px] text-muted-foreground lg:block">{status}</p>
+      <time className="px-3 font-mono text-xs tabular-nums">{clock}</time>
     </nav>
   );
 }

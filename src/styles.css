@@ -129,9 +129,39 @@
   backdrop-filter: blur(18px);
 }
 
+.kiln-xfce-panel {
+  background: color-mix(in srgb, var(--color-card) 94%, transparent);
+  box-shadow: 0 -1px 0 color-mix(in srgb, var(--color-paper) 8%, transparent);
+}
+
+.kiln-kasm {
+  background: var(--color-card);
+  box-shadow: 1px 0 0 color-mix(in srgb, var(--color-paper) 8%, transparent);
+}
+
 .kiln-topbar {
   background: color-mix(in srgb, var(--color-background) 72%, transparent);
   backdrop-filter: blur(16px);
+}
+
+@keyframes kiln-connect {
+  from {
+    transform: translateX(-80%);
+  }
+  to {
+    transform: translateX(280%);
+  }
+}
+
+.kiln-connect-bar {
+  animation: kiln-connect 1.15s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kiln-connect-bar {
+    animation: none;
+    width: 66%;
+  }
 }
 
 [data-desk="ubuntu"] { --desk-from: #2a1810; --desk-to: #0c0c0e; --desk-spot: #c46a48; }

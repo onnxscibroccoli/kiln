@@ -1,6 +1,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { chatAgent, type AgentMessage } from "@/lib/agent";
 import { execLine, formatResult, type AppId, type ShellHooks, type ShellState } from "@/lib/linux/shell";
+import { isImagePath } from "@/lib/linux/images-meta";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -72,8 +73,9 @@ export function AgentApp({
       if (name === "open_file") {
         const path = state.vfs.normalize(args.path ?? "", state.cwd, state.env.HOME || `/home/${state.user}`);
         hooks.openFile(path);
-        hooks.openApp?.("editor");
-        return `opened ${path} in Text Editor`;
+        const app = isImagePath(path) ? "viewer" : "editor";
+        hooks.openApp?.(app);
+        return `opened ${path} in ${app === "viewer" ? "Ristretto" : "Mousepad"}`;
       }
       if (name === "run_command") {
         const line = (args.command ?? "").slice(0, 500);

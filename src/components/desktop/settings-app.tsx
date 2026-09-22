@@ -16,15 +16,15 @@ export function SettingsApp({
       <dl className="mt-4 grid gap-3 text-sm">
         <Row k="Hostname" v={box.name} />
         <Row k="Image" v={distro.pretty} />
-        <Row k="Desktop" v={distro.desktop === "none" ? "shell only" : distro.desktop} />
+        <Row k="Desktop" v="XFCE · display :0" />
         <Row k="Packages" v={distro.pkgBin} />
         <Row k="User" v={user} />
         {box.githubRepo && <Row k="GitHub" v={box.githubRepo} />}
       </dl>
       <p className="mt-6 max-w-sm text-sm leading-relaxed text-muted-foreground">
-        Session is attached like a remote display: XFCE layout, control bar, image viewer. A real Xorg
-        stack cannot run inside this hosted app; the GitHub repo includes a self-host provision script
-        for TigerVNC and noVNC on your own machine.
+        This tab is the graphical session: control strip, wallpaper, Applications menu, Thunar, and
+        Ristretto. A native X11 + TigerVNC + noVNC (or KasmVNC) stack is in the Kiln GitHub repo for
+        machines you administer.
       </p>
     </div>
   );

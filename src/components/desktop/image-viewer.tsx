@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { type Vfs } from "@/lib/linux/vfs";
 import { isImagePath } from "@/lib/linux/images-meta";
+import { vfsImageSrc } from "@/lib/linux/image-src";
 import { cn } from "@/lib/utils";
 
 export function ImageViewer({
@@ -18,8 +19,9 @@ export function ImageViewer({
   rev: number;
 }) {
   const pictures = `${home}/Pictures`;
+  const desktop = `${home}/Desktop`;
   const album = useMemo(() => {
-    const dirs = [pictures, home];
+    const dirs = [pictures, desktop, home];
     const out: string[] = [];
     for (const d of dirs) {
       try {
@@ -36,25 +38,11 @@ export function ImageViewer({
     }
     void rev;
     return out;
-  }, [vfs, home, pictures, rev]);
+  }, [vfs, home, pictures, desktop, rev]);
 
-  const current = path && vfs.isFile(path) ? path : album[0] ?? null;
+  const current = path && isImagePath(path) && vfs.isFile(path) ? path : album[0] ?? null;
   const [broken, setBroken] = useState(false);
-
-  const src = useMemo(() => {
-    if (!current) return null;
-    try {
-      const raw = vfs.readFile(current);
-      if (current.endsWith(".svg") || raw.trim().startsWith("<svg")) {
-        return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(raw)}`;
-      }
-      if (raw.startsWith("http://") || raw.startsWith("https://") || raw.startsWith("data:")) return raw;
-      return `data:image/png;base64,${btoa(raw.slice(0, 200_000))}`;
-    } catch {
-      return null;
-    }
-  }, [vfs, current, rev]);
-
+  const src = vfsImageSrc(vfs, current);
   const idx = current ? album.indexOf(current) : -1;
 
   function step(dir: number) {
@@ -88,27 +76,31 @@ export function ImageViewer({
             onError={() => setBroken(true)}
           />
         ) : (
-          <p className="text-sm text-muted-foreground">Drop an SVG in Pictures, or open one from Files.</p>
+          <p className="text-sm text-muted-foreground">Open an image from the desktop or Pictures.</p>
         )}
       </div>
       {album.length > 0 && (
         <div className="flex h-16 shrink-0 gap-2 overflow-x-auto border-t border-border px-2 py-2">
-          {album.map((p) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => {
-                setBroken(false);
-                onPath(p);
-              }}
-              className={cn(
-                "h-12 shrink-0 rounded-md px-3 font-mono text-[11px]",
-                p === current ? "bg-accent text-accent-foreground" : "bg-secondary text-muted-foreground",
-              )}
-            >
-              {p.split("/").pop()}
-            </button>
-          ))}
+          {album.map((p) => {
+            const thumb = vfsImageSrc(vfs, p);
+            return (
+              <button
+                key={p}
+                type="button"
+                onClick={() => {
+                  setBroken(false);
+                  onPath(p);
+                }}
+                className={cn(
+                  "flex h-12 shrink-0 items-center gap-2 rounded-md px-2 font-mono text-[11px]",
+                  p === current ? "bg-accent text-accent-foreground" : "bg-secondary text-muted-foreground",
+                )}
+              >
+                {thumb ? <img src={thumb} alt="" className="size-8 rounded-sm object-cover" /> : null}
+                {p.split("/").pop()}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

@@ -37,7 +37,7 @@ export function Landing() {
             </h1>
             <p className="mt-5 max-w-md text-base leading-relaxed text-muted-foreground">
               Sign in with Google, X, or email. Pick any image — Ubuntu, Fedora, Arch, or a GitHub
-              repo — and get a windowed desktop you can drive from a phone or a laptop.
+              repo — and get an XFCE desktop you drive from a phone or a laptop, pictures included.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               {isPending ? (

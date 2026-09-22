@@ -1,10 +1,10 @@
-import { Bot, Code2, Files, Globe, Package, Settings } from "lucide-react";
+import { Bot, Files, Globe, Image as ImageIcon, Package, Settings } from "lucide-react";
 import { type Distro } from "@/lib/linux/distros";
 import { type AppId } from "@/lib/linux/shell";
 
 const TILES: { id: AppId; label: string; body: string; icon: typeof Files }[] = [
-  { id: "files", label: "Files", body: "Folders and documents", icon: Files },
-  { id: "editor", label: "Text Editor", body: "Write and save", icon: Code2 },
+  { id: "files", label: "Thunar", body: "Folders and pictures", icon: Files },
+  { id: "viewer", label: "Ristretto", body: "View images", icon: ImageIcon },
   { id: "browser", label: "Web", body: "Open a page", icon: Globe },
   { id: "images", label: "Software", body: "Search Linux images", icon: Package },
   { id: "agent", label: "Agent", body: "Ask it to drive the desktop", icon: Bot },
@@ -22,11 +22,11 @@ export function WelcomeApp({
 }) {
   return (
     <div className="h-full overflow-auto px-5 py-6">
-      <p className="text-xs tracking-[0.18em] text-sage-dim uppercase">Kiln desktop</p>
+      <p className="text-xs tracking-[0.18em] text-sage-dim uppercase">xfce4-session</p>
       <h1 className="font-display mt-2 text-3xl tracking-tight">{distro.pretty}</h1>
       <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
-        Graphical session is running on {hostname}. Wallpaper, dock, and windows are the desktop —
-        nothing else to start.
+        Display :0 is attached on {hostname}. Wallpaper, desktop icons, and the panel are the session —
+        click a picture to open Ristretto.
       </p>
       <div className="mt-6 grid gap-2 sm:grid-cols-2">
         {TILES.map(({ id, label, body, icon: Icon }) => (

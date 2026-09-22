@@ -16,7 +16,7 @@ export function ConnectSplash({
 }) {
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const t = window.setTimeout(onDone, reduce ? 80 : 900);
+    const t = window.setTimeout(onDone, reduce ? 80 : 1100);
     return () => window.clearTimeout(t);
   }, [onDone]);
 
@@ -25,10 +25,10 @@ export function ConnectSplash({
       <p className="text-xs tracking-[0.18em] text-sage-dim uppercase">Kiln display</p>
       <h1 className="font-display mt-3 text-3xl tracking-tight">Connecting to :0</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        {distro} · XFCE session · {host}
+        {distro} · xfce4-session · {host}
       </p>
       <div className="mt-8 h-1 w-48 overflow-hidden rounded-full bg-secondary">
-        <div className="h-full w-2/3 bg-sage" />
+        <div className="kiln-connect-bar h-full w-1/3 bg-sage" />
       </div>
     </div>
   );
@@ -40,12 +40,18 @@ export function SessionBar({
   saveState,
   clipboard,
   onClipboard,
+  onMenu,
+  onSettings,
+  onTerminal,
 }: {
   host: string;
   distro: string;
   saveState: "idle" | "saving" | "saved" | "error";
   clipboard: string;
   onClipboard: (v: string) => void;
+  onMenu?: () => void;
+  onSettings?: () => void;
+  onTerminal?: () => void;
 }) {
   const [full, setFull] = useState(false);
   const [keys, setKeys] = useState(false);
@@ -75,14 +81,14 @@ export function SessionBar({
   }
 
   return (
-    <header className="kiln-topbar relative flex h-11 shrink-0 items-center gap-1 border-b border-border px-1 sm:px-2">
+    <header className="kiln-topbar relative flex h-11 shrink-0 items-center gap-1 border-b border-border px-1 md:hidden">
       <Button variant="ghost" size="icon" className="size-11" asChild>
         <Link to="/boxes" aria-label="Disconnect">
           <ArrowLeft className="size-4" />
         </Link>
       </Button>
       <div className="min-w-0 flex-1 px-1">
-        <p className="truncate text-xs sm:text-sm">
+        <p className="truncate text-xs">
           <span className="text-good">Connected</span>
           <span className="text-muted-foreground"> · {host} · {distro} · :0</span>
         </p>
@@ -93,7 +99,7 @@ export function SessionBar({
               ? "Volume synced"
               : saveState === "error"
                 ? "Sync failed"
-                : "XFCE · Kiln compositor"}
+                : "XFCE · display :0"}
         </p>
       </div>
       <button
@@ -115,16 +121,14 @@ export function SessionBar({
       <button type="button" aria-label="Fullscreen" className="inline-flex size-11 items-center justify-center" onClick={() => void toggleFull()}>
         {full ? <Shrink className="size-4" /> : <Expand className="size-4" />}
       </button>
-      <div className="hidden sm:block">
-        <UserButton />
-      </div>
+      <UserButton />
       {clip && (
         <div className="absolute top-11 right-2 z-50 w-[min(100%-1rem,20rem)] rounded-lg bg-card p-3 shadow-[var(--shadow-border)]">
-          <label htmlFor="kiln-clip" className="text-xs text-muted-foreground">
+          <label htmlFor="kiln-clip-m" className="text-xs text-muted-foreground">
             Clipboard
           </label>
           <textarea
-            id="kiln-clip"
+            id="kiln-clip-m"
             value={clipboard}
             onChange={(e) => onClipboard(e.target.value)}
             className="mt-1 h-24 w-full resize-none bg-transparent text-sm outline-none"
@@ -136,11 +140,27 @@ export function SessionBar({
       )}
       {keys && (
         <div className="absolute top-11 right-2 z-50 flex flex-wrap gap-1 rounded-lg bg-card p-2 shadow-[var(--shadow-border)]">
-          {["Ctrl", "Alt", "Tab", "Esc", "Super"].map((k) => (
-            <span key={k} className="inline-flex h-11 min-w-11 items-center justify-center rounded-md bg-secondary px-3 font-mono text-xs">
-              {k}
-            </span>
-          ))}
+          <button
+            type="button"
+            className="inline-flex h-11 min-w-11 items-center justify-center rounded-md bg-secondary px-3 font-mono text-xs"
+            onClick={onMenu}
+          >
+            Super
+          </button>
+          <button
+            type="button"
+            className="inline-flex h-11 min-w-11 items-center justify-center rounded-md bg-secondary px-3 font-mono text-xs"
+            onClick={onTerminal}
+          >
+            Ctrl+Alt+T
+          </button>
+          <button
+            type="button"
+            className="inline-flex h-11 min-w-11 items-center justify-center rounded-md bg-secondary px-3 font-mono text-xs"
+            onClick={onSettings}
+          >
+            Esc
+          </button>
         </div>
       )}
     </header>

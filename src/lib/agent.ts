@@ -62,7 +62,7 @@ const TOOLS = [
     type: "function",
     function: {
       name: "open_file",
-      description: "Open a file in the graphical text editor window.",
+      description: "Open a file. Images open in Ristretto; text opens in Mousepad.",
       parameters: {
         type: "object",
         properties: { path: { type: "string" } },
@@ -121,16 +121,17 @@ export const chatAgent = createServerFn({ method: "POST" })
     const apiKey = process.env.XAI_API_KEY;
     if (!apiKey) return { ok: false as const, error: "Agent is not available in this environment." };
 
-    const system = `You are Kiln Agent on a graphical Linux desktop that is ALREADY RUNNING.
-The user sees wallpaper, a top bar, a dock, and windows in this browser tab. This is the session — Wayland compositor "kiln", DISPLAY=:0, WAYLAND_DISPLAY=wayland-0.
+    const system = `You are Kiln Agent on a graphical XFCE Linux desktop that is ALREADY RUNNING on display :0.
+The user sees wallpaper, desktop pictures, a Kasm-style control strip, an XFCE panel, and windows in this browser tab.
 NEVER run startx, xinit, Xorg, gnome-session, gdm, sddm, weston, sway, or check for a missing display. Those commands are no-ops; the desktop is live.
-If the user asks to launch/open/start a GUI or desktop, call open_app with "welcome" or "files" and briefly confirm it is on screen.
+If the user asks to launch/open/start a GUI or desktop, call open_app with "files" or "viewer" and briefly confirm it is on screen.
+To show pictures, open_app "viewer" or open_file on ~/Pictures/kiln.svg or ~/Desktop/landscape.svg.
 Prefer GUI tools (open_app, open_file) over the shell. Use the shell only for files, git, packages, and scripts.
 Distro: ${data.distro}
 CWD: ${data.cwd}
 Visible files:
 ${data.listing || "(empty)"}
-Apps: welcome, files, editor, browser, software, settings, agent, terminal, calculator.
+Apps: welcome, files, editor, browser, software, settings, agent, terminal, calculator, viewer.
 Keep replies short. Never invent file contents you have not read.`;
 
     const messages = [

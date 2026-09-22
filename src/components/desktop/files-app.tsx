@@ -1,6 +1,7 @@
 import { useMemo } from "react";
-import { ChevronLeft, File as FileIcon, Folder, Home } from "lucide-react";
+import { ChevronLeft, Home } from "lucide-react";
 import { type Vfs } from "@/lib/linux/vfs";
+import { FileGlyph } from "@/components/desktop/file-glyph";
 import { cn } from "@/lib/utils";
 
 export function FilesApp({
@@ -32,9 +33,8 @@ export function FilesApp({
         abs: acc,
       });
     }
-    return list;
-    // rev keeps listing fresh after mutations
     void rev;
+    return list;
   }, [path, home, rev]);
 
   const entries = useMemo(() => {
@@ -111,11 +111,7 @@ export function FilesApp({
                     on ? "bg-accent text-accent-foreground" : "hover:bg-secondary",
                   )}
                 >
-                  {isDir ? (
-                    <Folder className="size-8 text-sage" />
-                  ) : (
-                    <FileIcon className="size-8 text-muted-foreground" />
-                  )}
+                  <FileGlyph vfs={vfs} path={abs} isDir={isDir} rev={rev} />
                   <span className="w-full truncate text-xs">{e.name}</span>
                 </button>
               );

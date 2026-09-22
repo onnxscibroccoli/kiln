@@ -23,25 +23,29 @@ import { CalcApp } from "@/components/desktop/calc-app";
 import { ImageViewer } from "@/components/desktop/image-viewer";
 import { ConnectSplash, SessionBar } from "@/components/desktop/session-chrome";
 import { XfcePanel } from "@/components/desktop/xfce-panel";
+import { KasmPanel } from "@/components/desktop/kasm-panel";
+import { DesktopIcons } from "@/components/desktop/desktop-icons";
+import { WhiskerMenu, type MenuApp } from "@/components/desktop/whisker-menu";
 import { WindowFrame, type WinState } from "@/components/desktop/window-frame";
 import { Button } from "@/components/ui/button";
 import { type Distro } from "@/lib/linux/distros";
 import { isImagePath } from "@/lib/linux/images-meta";
+import { vfsImageSrc } from "@/lib/linux/image-src";
 import { type AppId, type ShellHooks, type ShellState } from "@/lib/linux/shell";
 import { type Workstation } from "@/lib/workstations";
 import { cn } from "@/lib/utils";
 
-const APPS: { id: AppId; label: string; icon: typeof Files }[] = [
-  { id: "files", label: "Thunar", icon: Files },
-  { id: "editor", label: "Mousepad", icon: Code2 },
-  { id: "browser", label: "Web", icon: Globe },
-  { id: "viewer", label: "Ristretto", icon: ImageIcon },
-  { id: "images", label: "Software", icon: Package },
-  { id: "agent", label: "Agent", icon: Bot },
-  { id: "calc", label: "Calculator", icon: Calculator },
-  { id: "settings", label: "Settings", icon: Settings },
-  { id: "term", label: "Terminal", icon: TerminalSquare },
-  { id: "welcome", label: "About", icon: Folder },
+const APPS: MenuApp[] = [
+  { id: "files", label: "Thunar", group: "Accessories", icon: Files },
+  { id: "editor", label: "Mousepad", group: "Accessories", icon: Code2 },
+  { id: "browser", label: "Web", group: "Internet", icon: Globe },
+  { id: "viewer", label: "Ristretto", group: "Graphics", icon: ImageIcon },
+  { id: "images", label: "Software", group: "System", icon: Package },
+  { id: "agent", label: "Agent", group: "System", icon: Bot },
+  { id: "calc", label: "Calculator", group: "Accessories", icon: Calculator },
+  { id: "settings", label: "Settings", group: "System", icon: Settings },
+  { id: "term", label: "Terminal", group: "System", icon: TerminalSquare },
+  { id: "welcome", label: "About", group: "System", icon: Folder },
 ];
 
 const LAUNCH: AppId[] = ["files", "browser", "editor", "viewer", "agent"];
@@ -153,6 +157,10 @@ export function DesktopShell({
     return () => window.clearInterval(t);
   }, []);
 
+  useEffect(() => {
+    if (cloneNote) setClip(cloneNote);
+  }, [cloneNote]);
+
   const zTop = useMemo(() => Math.max(1, ...Object.values(wins).map((w) => w.z)), [wins]);
 
   const openApp = useCallback(
@@ -186,6 +194,7 @@ export function DesktopShell({
   );
 
   const openWindows = Object.values(wins).filter((w) => w.open && !w.minimized);
+  const wallpaper = vfsImageSrc(st.vfs, `${home}/Pictures/wallpaper.svg`);
 
   function openFromFiles(p: string) {
     onOpenFile(p);
@@ -202,169 +211,167 @@ export function DesktopShell({
     );
   }
 
-  const icons = [
-    { label: "Home", path: home, dir: true },
-    { label: "Pictures", path: `${home}/Pictures`, dir: true },
-    { label: "Projects", path: `${home}/projects`, dir: true },
-  ];
-
   return (
-    <div className="kiln-desk flex h-dvh flex-col" data-desk={distro.desk}>
-      <SessionBar
+    <div className="kiln-desk flex h-dvh" data-desk={distro.desk}>
+      <KasmPanel
         host={box.name}
         distro={distro.name}
         saveState={saveState}
         clipboard={clip}
         onClipboard={setClip}
-      />
-
-      <div className="relative min-h-0 flex-1">
-        <div className="pointer-events-none absolute inset-0 flex items-start justify-center pt-16">
-          <p className="font-display text-2xl tracking-tight text-paper/70 italic">{distro.pretty}</p>
-        </div>
-
-        <div className={cn("absolute top-4 left-3 z-10 flex flex-col gap-2", openWindows.length && !desktop && "hidden")}>
-          {icons.map((icon) => (
-            <button
-              key={icon.label}
-              type="button"
-              onClick={() => {
-                if (st.vfs.isDir(icon.path)) onCwd(icon.path);
-                openApp(icon.label === "Pictures" ? "viewer" : "files");
-              }}
-              className="pointer-events-auto flex w-20 flex-col items-center gap-1 rounded-lg px-1 py-2 text-paper hover:bg-paper/10"
-            >
-              <Folder className="size-8" />
-              <span className="w-full truncate text-center text-[11px]">{icon.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {APPS.map(({ id }) => {
-          const win = wins[id]!;
-          if (!win.open) return null;
-          return (
-            <div key={id} className={cn(!win.minimized ? "contents" : "hidden")}>
-              <WindowFrame
-                win={win}
-                desktop={desktop}
-                active={focus === id}
-                onFocus={() => {
-                  setFocus(id);
-                  setWins((w) => ({ ...w, [id]: { ...w[id]!, z: zTop + 1 } }));
-                }}
-                onClose={() => setWins((w) => ({ ...w, [id]: { ...w[id]!, open: false, minimized: false } }))}
-                onMin={() => setWins((w) => ({ ...w, [id]: { ...w[id]!, minimized: true } }))}
-                onMax={() => setWins((w) => ({ ...w, [id]: { ...w[id]!, maximized: !w[id]!.maximized } }))}
-                onMove={(x, y) => setWins((w) => ({ ...w, [id]: { ...w[id]!, x, y } }))}
-              >
-                {id === "welcome" && <WelcomeApp distro={distro} hostname={box.name} onOpen={openApp} />}
-                {id === "files" && (
-                  <FilesApp
-                    vfs={st.vfs}
-                    home={home}
-                    cwd={st.cwd}
-                    active={openPath}
-                    onOpen={openFromFiles}
-                    onCwd={onCwd}
-                    rev={rev}
-                  />
-                )}
-                {id === "term" && (
-                  <TerminalPane
-                    state={st}
-                    hooks={hooked}
-                    restoring={restoring}
-                    distro={distro}
-                    hostname={box.name}
-                    onMutate={bump}
-                    focusNonce={termFocus}
-                  />
-                )}
-                {id === "editor" && (
-                  <EditorPane path={openPath} value={draft} dirty={dirty} onChange={onDraft} onSave={onSaveEditor} />
-                )}
-                {id === "images" && (
-                  <div className="flex h-full min-h-0 flex-col gap-3 overflow-auto p-3">
-                    <p className="text-sm text-muted-foreground">
-                      Search a Linux image or paste a GitHub URL. Your files stay.
-                    </p>
-                    <ImageBrowser selected={pick.id} onSelect={setPick} githubRepo={gh} onGithubRepo={setGh} />
-                    <Button
-                      className="h-11"
-                      disabled={applying}
-                      onClick={() => {
-                        setApplying(true);
-                        void onApplyImage(pick.id, gh).finally(() => setApplying(false));
-                      }}
-                    >
-                      {applying ? "Applying…" : `Use ${pick.name}`}
-                    </Button>
-                  </div>
-                )}
-                {id === "agent" && <AgentApp state={st} hooks={hooked} onMutate={bump} />}
-                {id === "settings" && <SettingsApp box={box} distro={distro} user={st.user} />}
-                {id === "browser" && <BrowserApp hooks={hooked} />}
-                {id === "calc" && <CalcApp />}
-                {id === "viewer" && (
-                  <ImageViewer vfs={st.vfs} home={home} path={openPath} onPath={onOpenFile} rev={rev} />
-                )}
-              </WindowFrame>
-            </div>
-          );
-        })}
-
-        {overview && (
-          <div className="absolute inset-0 z-50 flex flex-col bg-background/80 p-4 backdrop-blur-sm">
-            <p className="text-xs tracking-[0.18em] text-sage-dim uppercase">Applications</p>
-            <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-5">
-              {APPS.map(({ id, label, icon: Icon }) => (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => openApp(id)}
-                  className="flex h-24 flex-col items-center justify-center gap-2 rounded-xl bg-card shadow-[var(--shadow-border)]"
-                >
-                  <Icon className="size-5 text-sage" />
-                  <span className="text-xs">{label}</span>
-                </button>
-              ))}
-            </div>
-            <Button variant="ghost" className="mt-6 self-start" onClick={() => setOverview(false)}>
-              Close menu
-            </Button>
-          </div>
-        )}
-      </div>
-
-      <XfcePanel
-        clock={clock}
-        menuOpen={overview}
         onMenu={() => setOverview((v) => !v)}
-        focus={focus}
-        launchers={LAUNCH.map((id) => {
-          const meta = APPS.find((a) => a.id === id)!;
-          const Icon = meta.icon;
-          const on = wins[id]!.open && !wins[id]!.minimized && focus === id;
-          return {
-            id,
-            label: meta.label,
-            icon: <Icon className="size-5" />,
-            on,
-            onClick: () => {
-              if (wins[id]!.open && !wins[id]!.minimized && focus === id && desktop) {
-                setWins((w) => ({ ...w, [id]: { ...w[id]!, minimized: true } }));
-              } else openApp(id);
-            },
-          };
-        })}
-        tasks={openWindows.map((w) => ({
-          id: w.app,
-          label: w.title,
-          on: focus === w.app,
-          onClick: () => openApp(w.app),
-        }))}
+        onSettings={() => openApp("settings")}
+        onTerminal={() => openApp("term")}
       />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <SessionBar
+          host={box.name}
+          distro={distro.name}
+          saveState={saveState}
+          clipboard={clip}
+          onClipboard={setClip}
+          onMenu={() => setOverview((v) => !v)}
+          onSettings={() => openApp("settings")}
+          onTerminal={() => openApp("term")}
+        />
+
+        <div className="relative min-h-0 flex-1 overflow-hidden">
+          {wallpaper ? (
+            <img src={wallpaper} alt="" className="pointer-events-none absolute inset-0 h-full w-full object-cover" />
+          ) : null}
+          <div className="pointer-events-none absolute inset-0 flex items-start justify-center pt-16">
+            <p className="font-display text-2xl tracking-tight text-paper/70 italic drop-shadow-[0_1px_8px_rgba(0,0,0,0.55)]">
+              {distro.pretty}
+            </p>
+          </div>
+
+          <DesktopIcons
+            vfs={st.vfs}
+            home={home}
+            rev={rev}
+            onOpenFile={openFromFiles}
+            onOpenDir={(path) => {
+              if (st.vfs.isDir(path)) onCwd(path);
+              openApp("files");
+            }}
+            onOpenImage={(path) => {
+              onOpenFile(path);
+              openApp("viewer");
+            }}
+          />
+
+          {APPS.map(({ id }) => {
+            const win = wins[id]!;
+            if (!win.open) return null;
+            return (
+              <div key={id} className={cn(!win.minimized ? "contents" : "hidden")}>
+                <WindowFrame
+                  win={win}
+                  desktop={desktop}
+                  active={focus === id}
+                  onFocus={() => {
+                    setFocus(id);
+                    setWins((w) => ({ ...w, [id]: { ...w[id]!, z: zTop + 1 } }));
+                  }}
+                  onClose={() => setWins((w) => ({ ...w, [id]: { ...w[id]!, open: false, minimized: false } }))}
+                  onMin={() => setWins((w) => ({ ...w, [id]: { ...w[id]!, minimized: true } }))}
+                  onMax={() => setWins((w) => ({ ...w, [id]: { ...w[id]!, maximized: !w[id]!.maximized } }))}
+                  onMove={(x, y) => setWins((w) => ({ ...w, [id]: { ...w[id]!, x, y } }))}
+                >
+                  {id === "welcome" && <WelcomeApp distro={distro} hostname={box.name} onOpen={openApp} />}
+                  {id === "files" && (
+                    <FilesApp
+                      vfs={st.vfs}
+                      home={home}
+                      cwd={st.cwd}
+                      active={openPath}
+                      onOpen={openFromFiles}
+                      onCwd={onCwd}
+                      rev={rev}
+                    />
+                  )}
+                  {id === "term" && (
+                    <TerminalPane
+                      state={st}
+                      hooks={hooked}
+                      restoring={restoring}
+                      distro={distro}
+                      hostname={box.name}
+                      onMutate={bump}
+                      focusNonce={termFocus}
+                    />
+                  )}
+                  {id === "editor" && (
+                    <EditorPane path={openPath} value={draft} dirty={dirty} onChange={onDraft} onSave={onSaveEditor} />
+                  )}
+                  {id === "images" && (
+                    <div className="flex h-full min-h-0 flex-col gap-3 overflow-auto p-3">
+                      <p className="text-sm text-muted-foreground">
+                        Search a Linux image or paste a GitHub URL. Your files stay.
+                      </p>
+                      <ImageBrowser selected={pick.id} onSelect={setPick} githubRepo={gh} onGithubRepo={setGh} />
+                      <Button
+                        className="h-11"
+                        disabled={applying}
+                        onClick={() => {
+                          setApplying(true);
+                          void onApplyImage(pick.id, gh).finally(() => setApplying(false));
+                        }}
+                      >
+                        {applying ? "Applying…" : `Use ${pick.name}`}
+                      </Button>
+                    </div>
+                  )}
+                  {id === "agent" && <AgentApp state={st} hooks={hooked} onMutate={bump} />}
+                  {id === "settings" && <SettingsApp box={box} distro={distro} user={st.user} />}
+                  {id === "browser" && <BrowserApp hooks={hooked} />}
+                  {id === "calc" && <CalcApp />}
+                  {id === "viewer" && (
+                    <ImageViewer vfs={st.vfs} home={home} path={openPath} onPath={onOpenFile} rev={rev} />
+                  )}
+                </WindowFrame>
+              </div>
+            );
+          })}
+
+          {overview && (
+            <WhiskerMenu
+              apps={APPS}
+              onOpen={openApp}
+              onClose={() => setOverview(false)}
+            />
+          )}
+        </div>
+
+        <XfcePanel
+          clock={clock}
+          menuOpen={overview}
+          onMenu={() => setOverview((v) => !v)}
+          status={`${st.user}@${box.name} · :0`}
+          launchers={LAUNCH.map((id) => {
+            const meta = APPS.find((a) => a.id === id)!;
+            const Icon = meta.icon;
+            const on = wins[id]!.open && !wins[id]!.minimized && focus === id;
+            return {
+              id,
+              label: meta.label,
+              icon: <Icon className="size-5" />,
+              on,
+              onClick: () => {
+                if (wins[id]!.open && !wins[id]!.minimized && focus === id && desktop) {
+                  setWins((w) => ({ ...w, [id]: { ...w[id]!, minimized: true } }));
+                } else openApp(id);
+              },
+            };
+          })}
+          tasks={openWindows.map((w) => ({
+            id: w.app,
+            label: w.title,
+            on: focus === w.app,
+            onClick: () => openApp(w.app),
+          }))}
+        />
+      </div>
     </div>
   );
 }

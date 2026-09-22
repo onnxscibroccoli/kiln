@@ -73,7 +73,7 @@ export function WindowFrame({
       onMouseDown={onFocus}
       className={cn(
         "kiln-window flex min-h-0 flex-col overflow-hidden bg-card text-card-foreground",
-        floating ? "absolute rounded-lg" : "absolute inset-0 rounded-none md:inset-2 md:rounded-lg",
+        floating ? "absolute rounded-md" : "absolute inset-0 rounded-none md:inset-2 md:rounded-md",
         active ? "opacity-100" : "opacity-95",
         win.minimized && "hidden",
       )}
@@ -83,21 +83,23 @@ export function WindowFrame({
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
-        className="flex h-11 shrink-0 cursor-default items-center gap-1 border-b border-border px-2"
+        className={cn(
+          "flex h-11 shrink-0 cursor-default items-center gap-2 border-b px-1",
+          active ? "border-border bg-elevated" : "border-border bg-card",
+        )}
       >
+        <h2 className="min-w-0 flex-1 truncate px-2 text-xs font-medium">{win.title}</h2>
         <div className="flex items-center">
-          <IconBtn label="Close" onClick={onClose}>
-            <X className="size-3.5" />
-          </IconBtn>
           <IconBtn label="Minimize" onClick={onMin}>
             <Minus className="size-3.5" />
           </IconBtn>
           <IconBtn label="Maximize" onClick={onMax} className="hidden md:inline-flex">
             <Square className="size-3" />
           </IconBtn>
+          <IconBtn label="Close" onClick={onClose} danger>
+            <X className="size-3.5" />
+          </IconBtn>
         </div>
-        <h2 className="min-w-0 flex-1 truncate text-center text-xs font-medium">{win.title}</h2>
-        <div className="w-20" />
       </header>
       <div className="min-h-0 flex-1 overflow-hidden bg-background">{children}</div>
     </section>
@@ -109,11 +111,13 @@ function IconBtn({
   onClick,
   children,
   className,
+  danger,
 }: {
   label: string;
   onClick: () => void;
   children: ReactNode;
   className?: string;
+  danger?: boolean;
 }) {
   return (
     <button
@@ -122,6 +126,7 @@ function IconBtn({
       onClick={onClick}
       className={cn(
         "inline-flex size-11 items-center justify-center text-muted-foreground hover:text-foreground",
+        danger && "hover:bg-destructive/20 hover:text-destructive-foreground",
         className,
       )}
     >

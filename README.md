@@ -6,29 +6,38 @@ Live app: [lilac-nova-blade-atlas.grok.me](https://lilac-nova-blade-atlas.grok.m
 
 ## What it is
 
-The hosted app attaches an **XFCE-layout session** in the tab: connection chrome (clipboard, fullscreen, extra keys), wallpaper, Applications menu, Thunar, Mousepad, Ristretto image viewer, Web, Agent. The volume is yours.
+Open a box and you get an **XFCE session on display :0**: Kasm-style control strip (clipboard, extra keys, fullscreen), wallpaper, desktop pictures, Applications menu, Thunar, Mousepad, **Ristretto** image viewer, Web, Agent. The volume is yours.
 
-A real Xorg + TigerVNC + noVNC stack cannot run on the hosted deployment (no persistent display server). For a machine you control, use `scripts/provision-xfce-novnc.sh`.
-
-- XFCE-style panel and windowed apps
-- Image viewing (Ristretto) with Pictures on the desktop
+- Click kiln.svg / landscape.svg on the desktop — Ristretto opens the picture
 - Search Ubuntu, Fedora, Arch, Debian, Kali, and more
 - Paste a public GitHub URL to clone into `~/projects`
 - Google / X / email sign-in
 
-## Stack
+The hosted app is a graphical compositor (multi-user persistent boxes). A real Xorg process cannot run on the hosted deployment. For a machine you control, use the provision scripts below — they start XFCE on X11 and expose it in a browser.
 
-React 19, TanStack Start, Tailwind v4, xterm.js, Better Auth, PGLite.
+## Self-host XFCE + noVNC (native)
 
-## Self-host XFCE + noVNC
-
-On Debian/Ubuntu:
+Debian/Ubuntu. Installs XFCE, TigerVNC, websockify, noVNC, Ristretto, and sample pictures, then prints a web URL.
 
 ```bash
 sudo bash scripts/provision-xfce-novnc.sh
 ```
 
-Then open the printed noVNC URL. This is independent of the hosted Kiln compositor.
+Optional env: `DISPLAY_NUM`, `VNC_PORT`, `WEB_PORT`, `GEOM`, `USER_NAME`, `VNC_PASSWORD`.
+
+## Self-host XFCE + KasmVNC (Docker)
+
+Polished remote-desktop UI (linuxserver/webtop:ubuntu-xfce). Requires Docker.
+
+```bash
+sudo bash scripts/provision-kasmvnc.sh
+```
+
+Compose file: `deploy/docker-compose.kasmvnc.yml`.
+
+## Stack
+
+React 19, TanStack Start, Tailwind v4, xterm.js, Better Auth, PGLite.
 
 ## Develop
 

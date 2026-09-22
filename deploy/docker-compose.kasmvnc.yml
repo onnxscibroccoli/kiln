@@ -1,0 +1,25 @@
+# XFCE desktop + KasmVNC in the browser (linuxserver/webtop).
+# Start with: sudo bash scripts/provision-kasmvnc.sh
+services:
+  kiln-desktop:
+    image: lscr.io/linuxserver/webtop:ubuntu-xfce
+    container_name: kiln-xfce
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      PUID: "1000"
+      PGID: "1000"
+      TZ: Etc/UTC
+      TITLE: Kiln
+      CUSTOM_USER: ${CUSTOM_USER:-kiln}
+      PASSWORD: ${PASSWORD:-kiln}
+    volumes:
+      - kiln-config:/config
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+      - "${HTTPS_PORT:-3001}:3001"
+    shm_size: "1gb"
+    restart: unless-stopped
+
+volumes:
+  kiln-config:
