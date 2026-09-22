@@ -37,7 +37,7 @@ function mapBox(row: WorkstationRow): Workstation {
   return {
     id: row.id,
     name: row.name,
-    distro: isDistroId(row.distro) ? row.distro : "ubuntu",
+    distro: isDistroId(row.distro) ? row.distro : "tinycore",
     githubRepo: row.github_repo,
     status: row.status === "running" ? "running" : "stopped",
     lastOpenedAt: row.last_opened_at,

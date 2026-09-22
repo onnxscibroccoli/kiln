@@ -28,7 +28,7 @@ export function ImageBrowser({
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search Ubuntu, Fedora, Arch, Kali…"
+          placeholder="Search Tiny Core, Debian, Kali…"
           className="h-11 pl-9"
           aria-label="Search Linux images"
         />
@@ -66,7 +66,7 @@ export function ImageBrowser({
         )}
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="gh-image">GitHub image URL</Label>
+        <Label htmlFor="gh-image">Live ISO or GitHub URL</Label>
         <Input
           id="gh-image"
           value={githubRepo}
@@ -76,7 +76,7 @@ export function ImageBrowser({
             const inferred = inferDistroFromGithub(v);
             if (inferred) onSelect(inferred);
           }}
-          placeholder="owner/repo or https://github.com/owner/repo"
+          placeholder="https://example.com/live.iso or owner/repo"
         />
         <p className="text-xs text-muted-foreground">
           Public GitHub repos clone into ~/projects. Catalog images set the desktop, packages, and wallpaper.

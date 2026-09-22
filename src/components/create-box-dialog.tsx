@@ -27,7 +27,7 @@ export function CreateBoxDialog({
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [name, setName] = useState(() => NAMES[Math.floor(Math.random() * NAMES.length)]!);
-  const [image, setImage] = useState<Distro>(() => getDistro("ubuntu"));
+  const [image, setImage] = useState<Distro>(() => getDistro("tinycore"));
   const [githubRepo, setGithubRepo] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -52,7 +52,8 @@ export function CreateBoxDialog({
         <DialogHeader>
           <DialogTitle>New workstation</DialogTitle>
           <DialogDescription>
-            Search a Linux image, or paste a public GitHub URL. The desktop boots in this browser.
+            Search a Linux image, or paste a 32-bit live ISO URL. The machine is a real x86 PC
+            in this tab.
           </DialogDescription>
         </DialogHeader>
         <form

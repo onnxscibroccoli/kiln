@@ -186,3 +186,30 @@
 [data-desk="bluefin"] { --desk-from: #101820; --desk-to: #0c0c0e; --desk-spot: #8aa0aa; }
 [data-desk="bazzite"] { --desk-from: #1c1018; --desk-to: #0c0c0e; --desk-spot: #c46a48; }
 [data-desk="cachy"] { --desk-from: #10201c; --desk-to: #0c0c0e; --desk-spot: #7d9a86; }
+
+.kiln-vga {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-terminal);
+}
+
+.kiln-vga-text {
+  white-space: pre;
+  font: 14px/14px var(--font-mono);
+  color: var(--color-sage);
+}
+
+.kiln-vga-canvas {
+  display: block;
+  margin-inline: auto;
+  image-rendering: pixelated;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.phone_keyboard {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}

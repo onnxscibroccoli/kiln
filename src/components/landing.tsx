@@ -36,8 +36,8 @@ export function Landing() {
               <span className="mt-1 block not-italic text-foreground">It is still here when you come back.</span>
             </h1>
             <p className="mt-5 max-w-md text-base leading-relaxed text-muted-foreground">
-              Sign in with Google, X, or email. Pick any image — Ubuntu, Fedora, Arch, or a GitHub
-              repo — and get an XFCE desktop you drive from a phone or a laptop, pictures included.
+              Sign in with Google, X, or email. Start a real x86 machine in this tab — Tiny Core
+              Linux with X11 — or point it at a 32-bit live ISO.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               {isPending ? (
@@ -98,25 +98,25 @@ export function Landing() {
         <section className="grid gap-3 sm:grid-cols-3">
           <Feature
             icon={<LayoutGrid className="size-4" />}
-            title="Full desktop"
-            body="Windows, dock, files, terminal, editor, and an agent — on a phone or a laptop. No VNC."
+            title="Real machine"
+            body="An actual x86 PC in this tab: BIOS, Linux kernel, X11. Click the display and use it like local hardware."
           />
           <Feature
             icon={<HardDrive className="size-4" />}
-            title="Persistent volume"
-            body="The filesystem is saved to your account. Close the tab. Resume later on any device."
+            title="Snapshot"
+            body="Save the running machine and come back later. Same box, same display."
           />
           <Feature
             icon={<FolderGit2 className="size-4" />}
-            title="GitHub in"
-            body="Paste owner/repo or a GitHub image URL. Public trees land in ~/projects on the desktop."
+            title="Your ISO"
+            body="Tiny Core Linux is included. Paste a 32-bit live ISO URL to boot something else."
           />
         </section>
 
         <section className="mt-16">
           <h2 className="font-display text-2xl tracking-tight">Images</h2>
           <p className="mt-2 max-w-lg text-sm text-muted-foreground">
-            Search twenty-plus userspaces, or paste a public GitHub URL. Same persistence, different desktop.
+            Search live images, or paste a 32-bit ISO URL. Tiny Core boots a real X11 desktop.
           </p>
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
             {FEATURED_IDS.map((id) => {
