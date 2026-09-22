@@ -22,8 +22,8 @@ export function SettingsApp({
         {box.githubRepo && <Row k="GitHub" v={box.githubRepo} />}
       </dl>
       <p className="mt-6 max-w-sm text-sm leading-relaxed text-muted-foreground">
-        This desktop runs in your browser. The volume is yours; the wallpaper and package manager follow
-        the image you picked. It is not a remote hypervisor.
+        Graphical session is attached in this tab (Kiln compositor, wayland-0). There is no remote
+        display to start — the dock and windows are the desktop.
       </p>
     </div>
   );

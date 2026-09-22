@@ -1,4 +1,4 @@
-import { type ExecResult, type ShellContext } from "./shell";
+import { type AppId, type ExecResult, type ShellContext } from "./shell";
 import { ANSI } from "./ansi";
 import { BASE_PACKAGES, homeDir } from "./seed";
 import { matchGlob } from "./vfs";
@@ -410,6 +410,57 @@ register(["which", "type"], (args) => {
   return fail(`${c} not found`);
 });
 
+register(["command"], (args, ctx) => {
+  const flags = args.filter((a) => a.startsWith("-"));
+  const rest = args.filter((a) => !a.startsWith("-"));
+  const name = rest[0];
+  if (!name) return fail("command: no command");
+  if (flags.includes("-v") || flags.includes("-V")) {
+    if (COMMANDS[name]) return `/usr/bin/${name}`;
+    return fail(`command: ${name}: not found`);
+  }
+  return runCommand(name, rest.slice(1), ctx);
+});
+
+const DESKTOP_ALREADY =
+  "Kiln compositor is already running (wayland-0, DISPLAY=:0).\nGraphical session is on screen. Open Activities or: start files";
+
+register(
+  [
+    "startx",
+    "xinit",
+    "X",
+    "Xorg",
+    "startplasma",
+    "startplasma-x11",
+    "startplasma-wayland",
+    "gnome-session",
+    "gnome-shell",
+    "gdm",
+    "gdm3",
+    "sddm",
+    "lightdm",
+    "weston",
+    "sway",
+    "Hyprland",
+    "xfwm4",
+    "startxfce4",
+    "cinnamon-session",
+  ],
+  (_a, ctx) => {
+    ctx.openApp?.("welcome");
+    return ok(DESKTOP_ALREADY);
+  },
+);
+
+register(["xdpyinfo", "xrandr", "wayland-info"], () =>
+  [
+    "Kiln compositor (wayland-0)",
+    "output: kiln-virt 1920x1080 60Hz",
+    "session: graphical, already attached",
+  ].join("\n"),
+);
+
 register(["chmod"], (args, ctx) => {
   if (args.length < 2) return fail("chmod: missing operand");
   const abs = resolve(args[1]!, ctx);
@@ -570,17 +621,41 @@ register(["nautilus", "nemo", "thunar", "files", "open"], (args, ctx) => {
 
 register(["gnome-terminal", "konsole", "xterm", "terminal"], (_a, ctx) => {
   ctx.openApp?.("term");
-  return "opening terminal";
+  return "opening Terminal";
+});
+
+register(["firefox", "epiphany", "www-browser"], (_a, ctx) => {
+  ctx.openApp?.("browser");
+  return "opening Web";
+});
+
+register(["gnome-calculator", "galculator", "kcalc"], (_a, ctx) => {
+  ctx.openApp?.("calc");
+  return "opening Calculator";
+});
+
+register(["gedit", "mousepad", "kate"], (args, ctx) => {
+  if (args[0]) {
+    const abs = resolve(args[0], ctx);
+    if (!ctx.vfs.exists(abs)) ctx.vfs.writeFile(abs, "");
+    ctx.openFile(abs);
+  }
+  ctx.openApp?.("editor");
+  return "opening Text Editor";
 });
 
 register(["start", "gtk-launch"], (args, ctx) => {
-  const name = (args[0] ?? "").toLowerCase();
-  const map: Record<string, "files" | "term" | "editor" | "images" | "agent" | "settings"> = {
+  const name = (args[0] ?? "welcome").toLowerCase();
+  const map: Record<string, AppId> = {
     files: "files",
     nautilus: "files",
+    thunar: "files",
+    nemo: "files",
     terminal: "term",
     "gnome-terminal": "term",
+    konsole: "term",
     editor: "editor",
+    gedit: "editor",
     code: "editor",
     software: "images",
     images: "images",
@@ -589,11 +664,21 @@ register(["start", "gtk-launch"], (args, ctx) => {
     "kiln-agent": "agent",
     settings: "settings",
     "gnome-control-center": "settings",
+    browser: "browser",
+    firefox: "browser",
+    epiphany: "browser",
+    calculator: "calc",
+    "gnome-calculator": "calc",
+    welcome: "welcome",
+    desktop: "welcome",
+    gui: "welcome",
+    session: "welcome",
+    yelp: "welcome",
   };
   const app = map[name];
-  if (!app) return fail("start: try files, terminal, editor, software, agent, settings");
+  if (!app) return fail("start: try files, firefox, gedit, software, calculator, settings, agent");
   ctx.openApp?.(app);
-  return `starting ${app}`;
+  return `opened ${app} on the Kiln desktop`;
 });
 
 register(["node"], (args, ctx) => {

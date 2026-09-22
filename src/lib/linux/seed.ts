@@ -17,21 +17,14 @@ export function seedVfs(opts: {
   const home = homeDir(user);
   const readme = `# ${hostname}
 
-This is your persistent Kiln workstation — a Linux userspace in the browser.
-Files, history, and packages survive across sessions once you are signed in.
+This is your persistent Kiln desktop — a graphical Linux session in the browser.
+Windows, files, and packages survive across sessions once you are signed in.
 
-## First commands
-
-    ls -la
-    neofetch
-    cat ${home}/projects/hello/hello.js
-    node ${home}/projects/hello/hello.js
-    git clone https://github.com/owner/repo
-
-Open a file in the editor with \`code README.md\` or click it in the tree.
+Use the dock: Files, Web, Editor, Software, Agent.
+Activities lists Calculator, Settings, and Terminal.
 
 Distro: ${distro.pretty}
-Shell:  ${distro.shell}
+Session: Kiln compositor (wayland-0)
 User:   ${user}
 ${githubRepo ? `\nGitHub origin: ${githubRepo}\n` : ""}`;
 
@@ -69,6 +62,9 @@ PS1='\\u@\\h:\\w\\$ '
     home: dir({
       [user]: dir({
         "README.md": file(readme),
+        Desktop: dir(),
+        Documents: dir(),
+        Downloads: dir(),
         ".bashrc": file(bashrc),
         ".profile": file("source ~/.bashrc\n"),
         ".gitconfig": file(`[user]\n\tname = ${user}\n\temail = ${user}@${hostname}.kiln\n`),

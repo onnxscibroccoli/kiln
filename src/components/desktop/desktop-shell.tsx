@@ -3,56 +3,70 @@ import { Link } from "@tanstack/react-router";
 import {
   ArrowLeft,
   Bot,
+  Calculator,
   Code2,
+  File as FileIcon,
   Files,
+  Folder,
+  Globe,
   LayoutGrid,
   Package,
   Save,
   Settings,
   TerminalSquare,
 } from "lucide-react";
-import { FileTree } from "@/components/file-tree";
 import { EditorPane } from "@/components/editor-pane";
 import { TerminalPane } from "@/components/terminal-pane";
 import { ImageBrowser } from "@/components/desktop/image-browser";
 import { AgentApp } from "@/components/desktop/agent-app";
 import { SettingsApp } from "@/components/desktop/settings-app";
+import { FilesApp } from "@/components/desktop/files-app";
+import { WelcomeApp } from "@/components/desktop/welcome-app";
+import { BrowserApp } from "@/components/desktop/browser-app";
+import { CalcApp } from "@/components/desktop/calc-app";
 import { WindowFrame, type WinState } from "@/components/desktop/window-frame";
 import { Button } from "@/components/ui/button";
 import { UserButton } from "@/lib/auth/gates";
-import { getDistro, type Distro } from "@/lib/linux/distros";
+import { type Distro } from "@/lib/linux/distros";
 import { type AppId, type ShellHooks, type ShellState } from "@/lib/linux/shell";
 import { type Workstation } from "@/lib/workstations";
 import { cn } from "@/lib/utils";
 
 const APPS: { id: AppId; label: string; icon: typeof Files }[] = [
+  { id: "welcome", label: "Desktop", icon: LayoutGrid },
   { id: "files", label: "Files", icon: Files },
-  { id: "term", label: "Terminal", icon: TerminalSquare },
   { id: "editor", label: "Editor", icon: Code2 },
+  { id: "browser", label: "Web", icon: Globe },
   { id: "images", label: "Software", icon: Package },
   { id: "agent", label: "Agent", icon: Bot },
+  { id: "calc", label: "Calculator", icon: Calculator },
   { id: "settings", label: "Settings", icon: Settings },
+  { id: "term", label: "Terminal", icon: TerminalSquare },
 ];
 
+const DOCK: AppId[] = ["files", "browser", "editor", "images", "agent"];
+
 const GEOM: Record<AppId, Pick<WinState, "title" | "x" | "y" | "w" | "h">> = {
-  files: { title: "Files", x: 16, y: 12, w: 300, h: 460 },
+  welcome: { title: "Desktop", x: 72, y: 28, w: 560, h: 480 },
+  files: { title: "Files", x: 24, y: 16, w: 640, h: 480 },
   term: { title: "Terminal", x: 330, y: 40, w: 640, h: 390 },
-  editor: { title: "Editor", x: 160, y: 20, w: 700, h: 480 },
+  editor: { title: "Text Editor", x: 160, y: 20, w: 700, h: 480 },
   images: { title: "Software", x: 72, y: 28, w: 740, h: 520 },
   agent: { title: "Agent", x: 340, y: 28, w: 420, h: 520 },
   settings: { title: "Settings", x: 220, y: 64, w: 440, h: 420 },
+  browser: { title: "Web", x: 80, y: 24, w: 720, h: 520 },
+  calc: { title: "Calculator", x: 400, y: 80, w: 320, h: 440 },
 };
 
 function freshWins(desktop: boolean): Record<AppId, WinState> {
   const base = {} as Record<AppId, WinState>;
-  let z = 1;
   for (const app of APPS) {
     const g = GEOM[app.id];
-    const open = app.id === "term" || (desktop && app.id === "files");
+    const open = app.id === "welcome";
     base[app.id] = {
       app: app.id,
       ...g,
-      z: open ? z++ : 0,
+      z: open ? 2 : 0,
       minimized: false,
       maximized: !desktop,
       open,
@@ -106,7 +120,7 @@ export function DesktopShell({
 }) {
   const [desktop, setDesktop] = useState(false);
   const [wins, setWins] = useState<Record<AppId, WinState>>(() => freshWins(false));
-  const [focus, setFocus] = useState<AppId>("term");
+  const [focus, setFocus] = useState<AppId>("welcome");
   const [overview, setOverview] = useState(false);
   const [clock, setClock] = useState("");
   const [pick, setPick] = useState(distro);
@@ -133,9 +147,7 @@ export function DesktopShell({
 
   useEffect(() => {
     const tick = () =>
-      setClock(
-        new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
-      );
+      setClock(new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }));
     tick();
     const t = window.setInterval(tick, 15_000);
     return () => window.clearInterval(t);
@@ -148,7 +160,13 @@ export function DesktopShell({
       setOverview(false);
       setWins((w) => ({
         ...w,
-        [app]: { ...w[app]!, open: true, minimized: false, z: zTop + 1, maximized: desktop ? w[app]!.maximized : true },
+        [app]: {
+          ...w[app]!,
+          open: true,
+          minimized: false,
+          z: zTop + 1,
+          maximized: desktop ? w[app]!.maximized : true,
+        },
       }));
       setFocus(app);
     },
@@ -167,9 +185,14 @@ export function DesktopShell({
     [hooks, openApp],
   );
 
-  const active = Object.values(wins)
-    .filter((w) => w.open && !w.minimized)
-    .sort((a, b) => a.z - b.z);
+  const active = Object.values(wins).filter((w) => w.open && !w.minimized);
+  const anyWindow = active.length > 0;
+
+  const icons = [
+    { label: "Home", path: home, dir: true },
+    { label: "Projects", path: `${home}/projects`, dir: true },
+    { label: "README", path: `${home}/README.md`, dir: false },
+  ];
 
   return (
     <div className="kiln-desk flex h-dvh flex-col" data-desk={distro.desk}>
@@ -195,7 +218,13 @@ export function DesktopShell({
           {cloneNote && <p className="truncate text-[11px] text-sage-dim">{cloneNote}</p>}
         </div>
         <span className="hidden text-xs text-muted-foreground sm:inline">
-          {saveState === "saving" ? "Saving…" : saveState === "saved" ? "Saved" : saveState === "error" ? "Save failed" : ""}
+          {saveState === "saving"
+            ? "Saving…"
+            : saveState === "saved"
+              ? "Saved"
+              : saveState === "error"
+                ? "Save failed"
+                : ""}
         </span>
         <Button variant="ghost" size="icon" className="size-11" onClick={() => persist()} aria-label="Save">
           <Save className="size-4" />
@@ -207,13 +236,31 @@ export function DesktopShell({
       </header>
 
       <div className="relative min-h-0 flex-1">
-        {active.length === 0 && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <p className="font-display text-2xl tracking-tight text-paper/80 italic">
-              {distro.pretty}
-            </p>
-          </div>
-        )}
+        <div className="pointer-events-none absolute inset-0 flex items-start justify-center pt-16">
+          <p className="font-display text-2xl tracking-tight text-paper/70 italic">{distro.pretty}</p>
+        </div>
+
+        <div className={cn("absolute top-4 left-3 z-10 flex flex-col gap-2", anyWindow && !desktop && "hidden")}>
+          {icons.map((icon) => (
+            <button
+              key={icon.label}
+              type="button"
+              onClick={() => {
+                if (icon.dir) {
+                  if (st.vfs.isDir(icon.path)) onCwd(icon.path);
+                  openApp("files");
+                } else {
+                  onOpenFile(icon.path);
+                  openApp("editor");
+                }
+              }}
+              className="pointer-events-auto flex w-20 flex-col items-center gap-1 rounded-lg px-1 py-2 text-paper hover:bg-paper/10"
+            >
+              {icon.dir ? <Folder className="size-8" /> : <FileIcon className="size-8" />}
+              <span className="w-full truncate text-center text-[11px]">{icon.label}</span>
+            </button>
+          ))}
+        </div>
 
         {APPS.map(({ id }) => {
           const win = wins[id]!;
@@ -235,8 +282,11 @@ export function DesktopShell({
                 }
                 onMove={(x, y) => setWins((w) => ({ ...w, [id]: { ...w[id]!, x, y } }))}
               >
+                {id === "welcome" && (
+                  <WelcomeApp distro={distro} hostname={box.name} onOpen={openApp} />
+                )}
                 {id === "files" && (
-                  <FileTree
+                  <FilesApp
                     vfs={st.vfs}
                     home={home}
                     cwd={st.cwd}
@@ -272,8 +322,7 @@ export function DesktopShell({
                 {id === "images" && (
                   <div className="flex h-full min-h-0 flex-col gap-3 overflow-auto p-3">
                     <p className="text-sm text-muted-foreground">
-                      Search the catalog or paste a GitHub image URL. Applying changes wallpaper, packages, and
-                      os-release — your files stay.
+                      Search the catalog or paste a GitHub image URL. Your files stay.
                     </p>
                     <ImageBrowser
                       selected={pick.id}
@@ -295,6 +344,8 @@ export function DesktopShell({
                 )}
                 {id === "agent" && <AgentApp state={st} hooks={hooked} onMutate={bump} />}
                 {id === "settings" && <SettingsApp box={box} distro={distro} user={st.user} />}
+                {id === "browser" && <BrowserApp hooks={hooked} />}
+                {id === "calc" && <CalcApp />}
               </WindowFrame>
             </div>
           );
@@ -303,7 +354,7 @@ export function DesktopShell({
         {overview && (
           <div className="absolute inset-0 z-50 flex flex-col bg-background/80 p-4 backdrop-blur-sm">
             <p className="text-xs tracking-[0.18em] text-sage-dim uppercase">Applications</p>
-            <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-6">
+            <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-3 md:grid-cols-5">
               {APPS.map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
@@ -323,21 +374,31 @@ export function DesktopShell({
         )}
       </div>
 
-      <nav className="kiln-dock mx-auto mb-2 flex h-14 w-[min(100%-1rem,36rem)] items-center justify-around rounded-xl px-1">
-        {APPS.map(({ id, label, icon: Icon }) => {
+      <nav className="kiln-dock mx-auto mb-2 flex h-14 w-[min(100%-1rem,28rem)] items-center justify-around rounded-xl px-1">
+        <button
+          type="button"
+          aria-label="Activities"
+          onClick={() => setOverview((v) => !v)}
+          className="flex size-11 items-center justify-center text-muted-foreground hover:text-foreground"
+        >
+          <LayoutGrid className="size-5" />
+        </button>
+        {DOCK.map((id) => {
+          const meta = APPS.find((a) => a.id === id)!;
+          const Icon = meta.icon;
           const on = wins[id]!.open && !wins[id]!.minimized && focus === id;
           return (
             <button
               key={id}
               type="button"
-              aria-label={label}
+              aria-label={meta.label}
               onClick={() => {
                 if (wins[id]!.open && !wins[id]!.minimized && focus === id && desktop) {
                   setWins((w) => ({ ...w, [id]: { ...w[id]!, minimized: true } }));
                 } else openApp(id);
               }}
               className={cn(
-                "flex size-11 flex-col items-center justify-center rounded-lg",
+                "flex size-11 items-center justify-center rounded-lg",
                 on ? "text-sage" : "text-muted-foreground hover:text-foreground",
               )}
             >
@@ -349,5 +410,3 @@ export function DesktopShell({
     </div>
   );
 }
-
-export { getDistro };

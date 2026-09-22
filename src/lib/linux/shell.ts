@@ -4,7 +4,16 @@ import { homeDir } from "./seed";
 import { runCommand } from "./commands";
 import { ANSI } from "./ansi";
 
-export type AppId = "files" | "term" | "editor" | "images" | "agent" | "settings";
+export type AppId =
+  | "welcome"
+  | "files"
+  | "term"
+  | "editor"
+  | "images"
+  | "agent"
+  | "settings"
+  | "browser"
+  | "calc";
 
 export type ShellHooks = {
   openFile: (path: string) => void;
@@ -62,9 +71,15 @@ export function createState(opts: {
       TERM: "xterm-256color",
       HOSTNAME: opts.hostname,
       PWD: opts.cwd || home,
-      EDITOR: "vim",
+      EDITOR: "gedit",
       LANG: "en_US.UTF-8",
+      GDK_BACKEND: "wayland",
       ...opts.env,
+      DISPLAY: opts.env?.DISPLAY || ":0",
+      WAYLAND_DISPLAY: opts.env?.WAYLAND_DISPLAY || "wayland-0",
+      XDG_SESSION_TYPE: "wayland",
+      XDG_CURRENT_DESKTOP: "Kiln",
+      DESKTOP_SESSION: opts.env?.DESKTOP_SESSION || "kiln",
     },
     history: opts.history ?? [],
     packages: opts.packages ?? [],

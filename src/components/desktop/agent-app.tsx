@@ -1,8 +1,28 @@
 import { useRef, useState, type FormEvent } from "react";
 import { chatAgent, type AgentMessage } from "@/lib/agent";
-import { execLine, formatResult, type ShellHooks, type ShellState } from "@/lib/linux/shell";
+import { execLine, formatResult, type AppId, type ShellHooks, type ShellState } from "@/lib/linux/shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+const APP_ALIAS: Record<string, AppId> = {
+  welcome: "welcome",
+  desktop: "welcome",
+  gui: "welcome",
+  files: "files",
+  nautilus: "files",
+  editor: "editor",
+  gedit: "editor",
+  browser: "browser",
+  firefox: "browser",
+  software: "images",
+  images: "images",
+  settings: "settings",
+  agent: "agent",
+  terminal: "term",
+  term: "term",
+  calculator: "calc",
+  calc: "calc",
+};
 
 export function AgentApp({
   state,
@@ -39,8 +59,24 @@ export function AgentApp({
       return "invalid arguments";
     }
     try {
+      if (name === "open_app") {
+        const key = (args.app ?? "welcome").toLowerCase();
+        const app = APP_ALIAS[key] ?? "welcome";
+        hooks.openApp?.(app);
+        return `opened ${app} on the desktop`;
+      }
+      if (name === "open_file") {
+        const path = state.vfs.normalize(args.path ?? "", state.cwd, state.env.HOME || `/home/${state.user}`);
+        hooks.openFile(path);
+        hooks.openApp?.("editor");
+        return `opened ${path} in Text Editor`;
+      }
       if (name === "run_command") {
         const line = (args.command ?? "").slice(0, 500);
+        if (/^\s*(startx|xinit|Xorg|gnome-session|gdm|sddm|weston|sway)\b/i.test(line)) {
+          hooks.openApp?.("welcome");
+          return "Desktop is already running. Opened the session overview.";
+        }
         const result = await execLine(line, state, hooks);
         onMutate();
         const formatted = formatResult(result).replace(/\x1b\[[0-9;]*m/g, "");
@@ -118,7 +154,7 @@ export function AgentApp({
           <div className="px-1 py-6">
             <p className="font-display text-xl tracking-tight">Kiln Agent</p>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              Ask it to inspect files, run commands, or draft code in this box. It can use the shell.
+              Ask it to open Files, edit a document, or install an image. The desktop is already running.
             </p>
           </div>
         )}
@@ -163,7 +199,7 @@ export function AgentApp({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={busy}
-          placeholder="List the project and summarize README"
+          placeholder="Open Files and summarize README"
           className="h-11 min-w-0 flex-1 rounded-md bg-transparent px-3 text-sm outline-none"
         />
         <Button type="submit" disabled={busy || !input.trim()} className="h-11">

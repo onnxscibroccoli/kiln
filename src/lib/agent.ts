@@ -32,8 +32,49 @@ const TOOLS = [
   {
     type: "function",
     function: {
+      name: "open_app",
+      description:
+        "Open a GUI window on the already-running Kiln desktop. Use this whenever the user wants a desktop, GUI, files, browser, editor, software, calculator, settings, or terminal. Never run startx. Apps: welcome, files, editor, browser, software, settings, agent, terminal, calculator",
+      parameters: {
+        type: "object",
+        properties: {
+          app: {
+            type: "string",
+            enum: [
+              "welcome",
+              "files",
+              "editor",
+              "browser",
+              "software",
+              "settings",
+              "agent",
+              "terminal",
+              "calculator",
+            ],
+          },
+        },
+        required: ["app"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "open_file",
+      description: "Open a file in the graphical text editor window.",
+      parameters: {
+        type: "object",
+        properties: { path: { type: "string" } },
+        required: ["path"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "run_command",
-      description: "Run a shell command in the Kiln workstation. Use for ls, cat, git, node, package managers, etc.",
+      description:
+        "Run a shell command for file/package work. Do not use this to start X11 or a desktop (startx, gnome-session, etc.). The GUI is already running.",
       parameters: {
         type: "object",
         properties: { command: { type: "string" } },
@@ -79,14 +120,17 @@ export const chatAgent = createServerFn({ method: "POST" })
     const apiKey = process.env.XAI_API_KEY;
     if (!apiKey) return { ok: false as const, error: "Agent is not available in this environment." };
 
-    const system = `You are Kiln Agent, a concise sysadmin and coding assistant inside a browser Linux workstation.
-The environment is a Kiln userspace (virtual filesystem + shell), not a cloud VM or hypervisor.
+    const system = `You are Kiln Agent on a graphical Linux desktop that is ALREADY RUNNING.
+The user sees wallpaper, a top bar, a dock, and windows in this browser tab. This is the session — Wayland compositor "kiln", DISPLAY=:0, WAYLAND_DISPLAY=wayland-0.
+NEVER run startx, xinit, Xorg, gnome-session, gdm, sddm, weston, sway, or check for a missing display. Those commands are no-ops; the desktop is live.
+If the user asks to launch/open/start a GUI or desktop, call open_app with "welcome" or "files" and briefly confirm it is on screen.
+Prefer GUI tools (open_app, open_file) over the shell. Use the shell only for files, git, packages, and scripts.
 Distro: ${data.distro}
 CWD: ${data.cwd}
 Visible files:
 ${data.listing || "(empty)"}
-
-Prefer doing work with tools over explaining. Keep replies short. Never invent file contents you have not read.`;
+Apps: welcome, files, editor, browser, software, settings, agent, terminal, calculator.
+Keep replies short. Never invent file contents you have not read.`;
 
     const messages = [
       { role: "system", content: system },
@@ -101,20 +145,34 @@ Prefer doing work with tools over explaining. Keep replies short. Never invent f
       }),
     ];
 
-    const res = await fetch("https://api.x.ai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "grok-4.5",
-        messages,
-        tools: TOOLS,
-        max_tokens: 700,
-        temperature: 0.4,
-      }),
-    });
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), 22_000);
+    let res: Response;
+    try {
+      res = await fetch("https://api.x.ai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        signal: ac.signal,
+        body: JSON.stringify({
+          model: "grok-4.5",
+          messages,
+          tools: TOOLS,
+          tool_choice: "auto",
+          max_tokens: 500,
+          temperature: 0.3,
+        }),
+      });
+    } catch {
+      clearTimeout(timer);
+      return {
+        ok: false as const,
+        error: "Agent timed out. The desktop is already on screen — use the dock.",
+      };
+    }
+    clearTimeout(timer);
 
     if (!res.ok) {
       const errText = await res.text().catch(() => "");
