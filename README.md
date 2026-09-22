@@ -12,6 +12,7 @@ Each box is a **virtual PC** running in the tab (BIOS, VGA, kernel, X server). T
 - Snapshot the running machine and resume later
 - Paste a **32-bit live ISO URL** to boot another image (Damn Small Linux, Debian i386, …)
 - 64-bit live CDs (current Kali/Ubuntu) cannot boot in this emulator; attach an i386 ISO instead
+- Kali Rolling XFCE over TigerVNC is the separate lab node in `onnxscibroccoli/kali-node`. Agents: `.github/agents/`
 
 ## Stack
 

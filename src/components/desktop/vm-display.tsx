@@ -4,7 +4,8 @@ import { ArrowLeft, Expand, Keyboard, Save, Shrink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserButton } from "@/lib/auth/gates";
 import { type BootSpec } from "@/lib/linux/boot-image";
-import { loadSnapshot, loadV86, saveSnapshot, sendChord, type V86Instance } from "@/lib/linux/v86";
+import { loadSnapshot, loadV86, saveSnapshot, sendChord, typeAscii, type V86Instance } from "@/lib/linux/v86";
+
 import { cn } from "@/lib/utils";
 
 type Progress = { loaded: number; total: number; file?: string };
@@ -106,7 +107,24 @@ export function VmDisplay({
               void emuRef.current.keyboard_send_scancodes([0x1c, 0x9c], 40);
             }, 2200);
           }
+          if (boot.startx) {
+            const started = Date.now();
+            const tick = () => {
+              if (dead || !emuRef.current) return;
+              const text = (root.innerText || "").toLowerCase();
+              const prompt =
+                text.includes("tinycorelinux.net") || text.includes("tc@") || text.includes("no warranty");
+              if (prompt || Date.now() - started > 50_000) {
+                setStatus("Starting X…");
+                void typeAscii(emuRef.current, "startx\n");
+                return;
+              }
+              window.setTimeout(tick, 1200);
+            };
+            window.setTimeout(tick, 5000);
+          }
         });
+
       } catch (e) {
         if (!dead) setError(e instanceof Error ? e.message : "Machine failed to start");
       }

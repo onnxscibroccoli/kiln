@@ -102,6 +102,40 @@ export const KEYS: Record<string, number[]> = {
   F1: [0x3b],
   F2: [0x3c],
   Super: [0x5b],
+  Enter: [0x1c],
+};
+
+const LETTER: Record<string, number> = {
+  a: 0x1e,
+  b: 0x30,
+  c: 0x2e,
+  d: 0x20,
+  e: 0x12,
+  f: 0x21,
+  g: 0x22,
+  h: 0x23,
+  i: 0x17,
+  j: 0x24,
+  k: 0x25,
+  l: 0x26,
+  m: 0x32,
+  n: 0x31,
+  o: 0x18,
+  p: 0x19,
+  q: 0x10,
+  r: 0x13,
+  s: 0x1f,
+  t: 0x14,
+  u: 0x16,
+  v: 0x2f,
+  w: 0x11,
+  x: 0x2d,
+  y: 0x15,
+  z: 0x2c,
+  " ": 0x39,
+  "-": 0x0c,
+  "/": 0x35,
+  ".": 0x34,
 };
 
 export async function sendChord(emu: V86Instance, names: string[]): Promise<void> {
@@ -110,3 +144,18 @@ export async function sendChord(emu: V86Instance, names: string[]): Promise<void
   const brk = [...make].reverse().map((c) => c | 0x80);
   await emu.keyboard_send_scancodes([...make, ...brk], 20);
 }
+
+export async function typeAscii(emu: V86Instance, text: string): Promise<void> {
+  const codes: number[] = [];
+  for (const ch of text) {
+    if (ch === "\n") {
+      codes.push(0x1c, 0x9c);
+      continue;
+    }
+    const make = LETTER[ch.toLowerCase()];
+    if (make == null) continue;
+    codes.push(make, make | 0x80);
+  }
+  if (codes.length) await emu.keyboard_send_scancodes(codes, 25);
+}
+

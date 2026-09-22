@@ -9,6 +9,7 @@ export type BootSpec = {
   async: boolean;
   label: string;
   sendEnter?: boolean;
+  startx?: boolean;
 };
 
 export function isIsoUrl(value: string | null | undefined): boolean {
@@ -28,6 +29,7 @@ export function bootSpecFor(distro: Distro, isoOrRepo?: string | null): BootSpec
       async: true,
       label: name,
       sendEnter: true,
+      startx: true,
     };
   }
   return {
@@ -37,6 +39,7 @@ export function bootSpecFor(distro: Distro, isoOrRepo?: string | null): BootSpec
     async: false,
     label: (distro.bootIso || TINYCORE_ISO) === TINYCORE_ISO ? "Tiny Core Linux 11" : distro.pretty,
     sendEnter: distro.bootMedia !== "fda",
+    startx: distro.desktop !== "none",
   };
 }
 

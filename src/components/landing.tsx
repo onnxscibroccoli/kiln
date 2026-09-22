@@ -10,13 +10,10 @@ import { FEATURED_IDS, getDistro } from "@/lib/linux/distros";
 import { FolderGit2, HardDrive, LayoutGrid } from "lucide-react";
 
 const BOOT = [
-  "[    0.000000] Linux version 6.8.0-kiln (gcc 13.2.0)",
-  "[    0.118000] kiln-fs: mounting persistent volume on /",
-  "[    0.184000] kiln-fs: restoring last session for flint",
-  "[    0.318000] kiln-init: Ubuntu 24.04.1 LTS",
-  "",
-  "Welcome to Kiln. Persistent volume attached.",
-  "cinder@flint:~$ neofetch",
+  "SeaBIOS (C) 2006-2020  v86",
+  "Booting from DVD/CD...",
+  "[    0.000000] Linux version 4.19.10-tinycore",
+  "Xvesa + FLWM on VGA — this is the machine.",
 ];
 
 export function Landing() {
