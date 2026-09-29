@@ -72,3 +72,10 @@ For changes to the emulator, test boot, display, input, snapshot/resume, and ima
 For changes to the self-hosting scripts, test the real VNC/WebSocket path separately.
 
 **Bottom line:** a genuine browser-contained virtual PC prototype with a separate native remote-desktop provisioning path.
+
+
+## Cross-Repository Knowledge Graph
+
+**GRAPH TAG: `OMNIKALI-KG-2026-09-28`**
+
+Future AI agents MUST read [`.omnikali/project-knowledge-graph.md`](.omnikali/project-knowledge-graph.md) before cross-repository architectural changes. Verify capability with tests and live evidence, preserve restore points, make atomic changes, and update the graph after material architecture or failure knowledge changes.
