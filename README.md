@@ -1,41 +1,74 @@
 # Kiln
 
-A real x86 PC in the browser. Sign in, start a box, and use a live Linux GUI (Tiny Core Linux with X11) as if it were sitting on your desk.
+**Status:** Functional browser workstation prototype / active development  
+**Repository:** `onnxscibroccoli/kiln`  
+**Documentation snapshot:** 2026-09-28 23:12 EDT
 
-Live app: [lilac-nova-blade-atlas.grok.me](https://lilac-nova-blade-atlas.grok.me/)
+Kiln is a GUI-first virtual PC that runs in the browser. Unlike a painted desktop mockup, its current implementation uses v86 to boot a real x86 Linux image inside the browser.
 
-## What it is
+It is related to the broader remote-computer work but should not be confused with the real Kali Rolling KVM workstation in `kali-node`.
 
-Each box is a **virtual PC** running in the tab (BIOS, VGA, kernel, X server). The included live desktop is **Tiny Core Linux 11** — actual Linux, actual Xvesa, FLWM, real apps. Click the display to take the mouse.
+## What it does
 
-- Not a painted window manager and not a terminal wrapper
-- Snapshot the running machine and resume later
-- Paste a **32-bit live ISO URL** to boot another image (Damn Small Linux, Debian i386, …)
-- 64-bit live CDs (current Kali/Ubuntu) cannot boot in this emulator; attach an i386 ISO instead
-- Kali Rolling XFCE over TigerVNC is the separate lab node in `onnxscibroccoli/kali-node`. Agents: `.github/agents/`
+The current in-browser machine uses:
 
-## Stack
+- v86;
+- SeaBIOS;
+- VGA emulation;
+- Tiny Core Linux 11;
+- X11/Xvesa;
+- FLWM;
+- real applications.
 
-React 19, TanStack Start, Tailwind v4, [v86](https://github.com/copy/v86), Better Auth, PGLite.
+The user interacts with the virtual machine through the browser.
 
-## Self-host a native X11 stack
+The repository also contains a separate self-hosting path for native XFCE/TigerVNC/noVNC or Docker KasmVNC.
 
-On a machine you administer, `scripts/provision-xfce-novnc.sh` and `scripts/provision-kasmvnc.sh` install XFCE + VNC + a browser client. That path is independent of the in-browser PC.
+## Repository map
 
-## Develop
+Approximately 193 tracked files are present.
+
+Important areas:
+
+- `src/components/desktop/` — GUI applications and desktop shell.
+- `src/lib/linux/` — boot images, virtual filesystem, Linux distributions, shell, and v86 integration.
+- `src/lib/workstations.ts` — workstation state.
+- `src/lib/agent.ts` — agent-facing desktop behavior.
+- `scripts/provision-xfce-novnc.sh` — native XFCE/noVNC provisioning.
+- `scripts/provision-kasmvnc.sh` — KasmVNC provisioning.
+- `public/vm/` — VM/emulator assets.
+- `.github/agents/` — operational agent contracts.
+
+## Development cycle
+
+**FUNCTIONAL PROTOTYPE / ACTIVE DEVELOPMENT.**
+
+Recent commits moved the product from a GUI-like shell to a real v86-backed Tiny Core desktop and added native/self-hosted remote-display paths.
+
+The current browser VM is deliberately limited. The repository documents that current 64-bit Kali/Ubuntu live images are not supported by the in-browser emulator path.
+
+## Development
 
 ```bash
 npm install
 npm run dev
-```
-
-Auth and database come from the host environment. Do not commit a `.env`.
-
-```bash
 npm run typecheck
 npm run build
 ```
 
-## License
+Authentication and database configuration come from the host environment. Never commit a local `.env`.
 
-Source published as-is for the Kiln workstation app. v86 is BSD-2-Clause; Tiny Core Linux is its own license. Bios/wasm under `public/vm/` come from the v86 project.
+## AI model instructions
+
+An AI must keep the two execution modes separate:
+
+1. **in-browser v86 PC** — real emulated x86 Linux in the browser;
+2. **native remote desktop** — separately provisioned XFCE/VNC/KasmVNC stack.
+
+Do not describe Kiln's Tiny Core VM as the same thing as OmniKali's persistent Kali Rolling KVM guest.
+
+For changes to the emulator, test boot, display, input, snapshot/resume, and image compatibility.
+
+For changes to the self-hosting scripts, test the real VNC/WebSocket path separately.
+
+**Bottom line:** a genuine browser-contained virtual PC prototype with a separate native remote-desktop provisioning path.
