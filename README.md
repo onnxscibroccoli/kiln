@@ -79,3 +79,7 @@ For changes to the self-hosting scripts, test the real VNC/WebSocket path separa
 **GRAPH TAG: `OMNIKALI-KG-2026-09-28`**
 
 Future AI agents MUST read [`.omnikali/project-knowledge-graph.md`](.omnikali/project-knowledge-graph.md) before cross-repository architectural changes. Verify capability with tests and live evidence, preserve restore points, make atomic changes, and update the graph after material architecture or failure knowledge changes.
+
+## Physical Android launcher
+
+Legacy physical Rish launch instructions are retired. Use the maintained Broccoli Core wrapper; remote Android retains an explicitly configured transport. See [physical Android Rish policy](docs/PHYSICAL_ANDROID_RISH.md).
