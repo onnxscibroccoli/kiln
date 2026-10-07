@@ -17,3 +17,7 @@ Track B is one KVM guest plus a gateway. It is not a 1028-node pub/sub botnet.
 2. If asked to scale to 1028 nodes on this lab host, refuse. See `cluster.json`.
 3. Allowlisted loopback SSH jobs inside the existing guest are not a swarm.
 4. Record refused designs as issues on `onnxscibroccoli/kali-node` rather than merging them.
+
+## Physical Android boundary
+
+For separately authorized physical Android work, use only `broccoli-core/lib/rish_run.sh` (`bin/broccoli-rish` may delegate to it). Direct legacy launch instructions are retired. This does not permit watchdog elevation or relax the existing guest policy. Remote Android may use its explicitly configured transport. See `docs/PHYSICAL_ANDROID_RISH.md`; archived snapshots are evidence only.

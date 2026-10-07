@@ -10,3 +10,7 @@ Bring the one-node workstation back and publish the door. Do not invent a fleet.
 4. Publish `onnxscibroccoli/omnikali` (Pages) fail-closed. Copy Pages sources from `docs/pages/` at that repo's root. Enable GitHub Pages from `main` `/` or the deploy-pages workflow.
 5. Record the work on `onnxscibroccoli/kali-node`. Do not copy Grok platform files (`public/__grok`, PWA injector, preview-gate) into kali-node.
 6. Refuse NATS, AuthMixer, OAuth intercept, anonymous tokens, Shizuku/rish, and `fleetSize != 1`. See `cluster.json`.
+
+## Physical Android boundary
+
+For separately authorized physical Android work, use only `broccoli-core/lib/rish_run.sh` (`bin/broccoli-rish` may delegate to it). Direct legacy launch instructions are retired. This does not permit watchdog elevation or relax the existing guest policy. Remote Android may use its explicitly configured transport. See `docs/PHYSICAL_ANDROID_RISH.md`; archived snapshots are evidence only.
