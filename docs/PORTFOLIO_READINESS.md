@@ -12,6 +12,15 @@
 
 **CI evidence:** no trustworthy workflow result was established during the initial portfolio audit. Mark NOT_VERIFIED until a run proves otherwise.
 
+Recorded 2026-11-11:
+- This repository has **no `.github/workflows/`**, so no GitHub Actions CI exists. CI status: NOT_VERIFIED.
+- Local reproduction on PR head `a01459f` (main `fed4779` + docs), Node 24.22.1, by a portfolio agent:
+  - `npm ci --ignore-scripts` succeeded (exit 0).
+  - `npm run build` exited 0 with `DATABASE_URL` unset; the migrate step was skipped.
+  - `npm run typecheck` exited 0.
+  - This is local evidence only, not a CI run.
+- **Caution:** `npm run build` also runs `db:migrate`, which applies `migrations/` to whatever `DATABASE_URL` is set. Unset it for review builds.
+
 ## First reviewer command (check prerequisites before executing)
 
 ```sh
