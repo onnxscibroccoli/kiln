@@ -1,5 +1,8 @@
 # Kiln
 
+
+> **Technical reviewers:** [Source-linked engineering evidence and ordered next steps](docs/PORTFOLIO_READINESS.md) · [tracking issue](https://github.com/onnxscibroccoli/kiln/issues/3). These records do not certify production behavior.
+
 **Status:** Functional browser workstation prototype / active development  
 **Repository:** `onnxscibroccoli/kiln`  
 **Documentation snapshot:** 2026-09-28 23:12 EDT
